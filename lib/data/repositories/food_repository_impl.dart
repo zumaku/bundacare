@@ -11,4 +11,11 @@ class FoodRepositoryImpl implements FoodRepository {
   Future<List<FoodLog>> getFoodLogsForToday() async {
     return await remoteDataSource.getFoodLogsForToday();
   }
+
+  // --- TAMBAHKAN BLOK KODE INI ---
+  @override
+  Future<void> saveFoodLog(FoodLog foodLog) async {
+    await remoteDataSource.saveFoodLog(foodLog);
+  }
+  // --------------------------------
 }

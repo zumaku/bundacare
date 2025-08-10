@@ -1,8 +1,10 @@
 import 'package:bundacare/core/services/supabase_service.dart';
 import 'package:bundacare/data/models/food_log_model.dart';
+import 'package:bundacare/domain/entities/food_log.dart';
 
 abstract class FoodRemoteDataSource {
   Future<List<FoodLogModel>> getFoodLogsForToday();
+  Future<void> saveFoodLog(FoodLog foodLog);
 }
 
 class FoodRemoteDataSourceImpl implements FoodRemoteDataSource {
@@ -27,6 +29,24 @@ class FoodRemoteDataSourceImpl implements FoodRemoteDataSource {
       return foodLogs;
     } catch (e) {
       throw Exception('Failed to fetch food logs: $e');
+    }
+  }
+
+  @override
+  Future<void> saveFoodLog(FoodLog foodLog) async {
+    try {
+      await supabase.from('food_logs').insert({
+        'user_id': supabase.auth.currentUser!.id,
+        'food_name': foodLog.foodName,
+        'image_url': foodLog.imageUrl,
+        'calories': foodLog.calories,
+        'protein': foodLog.protein,
+        'fat': foodLog.fat,
+        'carbohydrate': foodLog.carbohydrate,
+        'created_at': foodLog.createdAt.toIso8601String(),
+      });
+    } catch (e) {
+      throw Exception('Failed to save food log: $e');
     }
   }
 }

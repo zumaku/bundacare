@@ -1,6 +1,9 @@
 import 'dart:io';
+import 'package:bundacare/presentation/bloc/food/food_bloc.dart';
+import 'package:bundacare/presentation/screens/camera/detection_result_modal.dart';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 class CameraScreen extends StatefulWidget {
@@ -21,45 +24,38 @@ class _CameraScreenState extends State<CameraScreen> {
   }
 
   Future<void> _initializeCamera() async {
-    // 1. Minta izin kamera
     var status = await Permission.camera.request();
     if (status.isGranted) {
-      // 2. Dapatkan daftar kamera yang tersedia
       final cameras = await availableCameras();
       if (cameras.isNotEmpty) {
         final firstCamera = cameras.first;
-        
-        // 3. Buat dan inisialisasi CameraController
         _controller = CameraController(
           firstCamera,
           ResolutionPreset.high,
-          enableAudio: false, // Kita tidak butuh audio
+          enableAudio: false,
         );
-
         setState(() {
           _initializeControllerFuture = _controller!.initialize();
         });
       }
     } else {
-      // Handle jika izin ditolak
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Izin kamera ditolak. Fitur tidak dapat digunakan.')),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Izin kamera ditolak.')),
+        );
+      }
     }
   }
 
-  void _onTakePicture() async {
+  Future<void> _onTakePicture() async {
     try {
-      // Pastikan controller sudah diinisialisasi
       await _initializeControllerFuture;
-      if (_controller == null || !_controller!.value.isInitialized) {
-        return;
-      }
-      
-      // Ambil gambar
+      if (_controller == null || !_controller!.value.isInitialized) return;
+      if (!mounted) return; // FIX: Cek `mounted` sebelum async gap
+
       final image = await _controller!.takePicture();
       
-      // Setelah gambar diambil, kita akan proses ke tahap selanjutnya
+      if (!mounted) return; // FIX: Cek `mounted` lagi setelah async gap
       _processImage(File(image.path));
 
     } catch (e) {
@@ -68,27 +64,22 @@ class _CameraScreenState extends State<CameraScreen> {
   }
 
   void _processImage(File imageFile) {
-    // TODO (Tahap Berikutnya): 
-    // 1. Tampilkan Modal Bottom Sheet
-    // 2. Panggil DetectionBloc untuk memulai proses unggah & deteksi
-    // 3. Tampilkan hasil di modal
-
-    // Untuk sekarang, kita tampilkan dialog sederhana untuk konfirmasi
-    showDialog(
-      context: context, 
-      builder: (context) => AlertDialog(
-        title: const Text("Gambar Dipilih"),
-        content: Image.file(imageFile),
-        actions: [
-          TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text("OK"))
-        ],
-      )
+    final foodBloc = context.read<FoodBloc>();
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) {
+        return BlocProvider.value(
+          value: foodBloc,
+          child: DetectionResultModal(imageFile: imageFile),
+        );
+      },
     );
   }
 
   @override
   void dispose() {
-    // Penting: Buang controller saat widget tidak digunakan
     _controller?.dispose();
     super.dispose();
   }
@@ -102,21 +93,17 @@ class _CameraScreenState extends State<CameraScreen> {
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.done) {
             if (_controller != null && _controller!.value.isInitialized) {
-              // Jika controller siap, tampilkan pratinjau kamera dan tombol
               return Stack(
+                fit: StackFit.expand,
                 children: [
-                  Positioned.fill(
-                    child: CameraPreview(_controller!),
-                  ),
-                  _buildControls(), // UI untuk tombol-tombol
+                  CameraPreview(_controller!),
+                  _buildControls(),
                 ],
               );
             } else {
-              // Jika tidak ada kamera atau izin ditolak
-              return const Center(child: Text("Kamera tidak tersedia atau izin ditolak.", style: TextStyle(color: Colors.white)));
+              return const Center(child: Text("Kamera tidak tersedia.", style: TextStyle(color: Colors.white)));
             }
           } else {
-            // Selama menunggu, tampilkan loading indicator
             return const Center(child: CircularProgressIndicator());
           }
         },
@@ -124,7 +111,6 @@ class _CameraScreenState extends State<CameraScreen> {
     );
   }
 
-  // Widget untuk UI kontrol kamera
   Widget _buildControls() {
     return Align(
       alignment: Alignment.bottomCenter,
@@ -134,31 +120,32 @@ class _CameraScreenState extends State<CameraScreen> {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
-            // Tombol Galeri
             IconButton(
-              onPressed: () {
-                // TODO: Implementasi image_picker untuk galeri
-              },
+              onPressed: () {},
               icon: const Icon(Icons.photo_library, color: Colors.white, size: 30),
             ),
-            // Tombol Ambil Gambar
             GestureDetector(
               onTap: _onTakePicture,
               child: Container(
-                width: 70,
-                height: 70,
+                width: 70, height: 70,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: Colors.white,
-                  border: Border.all(color: Colors.pink, width: 4),
+                  color: Colors.transparent,
+                  border: Border.all(color: Colors.white, width: 4),
+                ),
+                child: Center(
+                  child: Container(
+                    width: 58, height: 58,
+                    decoration: const BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Colors.white
+                    ),
+                  ),
                 ),
               ),
             ),
-            // Tombol Flashlight
             IconButton(
-              onPressed: () {
-                // TODO: Implementasi flashlight
-              },
+              onPressed: () {},
               icon: const Icon(Icons.flash_on, color: Colors.white, size: 30),
             ),
           ],
