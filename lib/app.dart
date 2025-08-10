@@ -9,6 +9,7 @@ class BundaCareApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Kita hanya menyediakan AuthBloc secara global
     return BlocProvider(
       create: (context) => di.sl<AuthBloc>(),
       child: MaterialApp.router(
@@ -16,7 +17,6 @@ class BundaCareApp extends StatelessWidget {
         routerConfig: AppRouter.router,
         theme: ThemeData(
           brightness: Brightness.dark,
-          // ... tema lainnya
         ),
       ),
     );
