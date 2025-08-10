@@ -141,7 +141,9 @@ class _TrimesterCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // --- Logika Perhitungan ---
     final now = DateTime.now();
+    // Menghitung total minggu kehamilan yang telah berlalu
     final daysPassed = now.difference(startDate).inDays;
     final currentWeek = (daysPassed / 7).floor() + 1;
 
@@ -156,11 +158,11 @@ class _TrimesterCard extends StatelessWidget {
     } else if (currentWeek <= 27) {
       trimester = 2;
       weekInTrimester = currentWeek - 13;
-      totalWeeksInTrimester = 14;
+      totalWeeksInTrimester = 14; // Total durasi trimester 2 adalah 14 minggu (minggu 14 s/d 27)
     } else {
       trimester = 3;
       weekInTrimester = currentWeek - 27;
-      totalWeeksInTrimester = 13;
+      totalWeeksInTrimester = 13; // Total durasi trimester 3 adalah 13 minggu (minggu 28 s/d 40)
     }
 
     final progress = (totalWeeksInTrimester > 0) ? (weekInTrimester / totalWeeksInTrimester) : 0.0;
@@ -168,7 +170,9 @@ class _TrimesterCard extends StatelessWidget {
 
     return Card(
       clipBehavior: Clip.antiAlias,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      // Gunakan warna dari tema kartu yang sudah kita atur
+      color: Theme.of(context).cardTheme.color,
+      shape: Theme.of(context).cardTheme.shape,
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -176,25 +180,41 @@ class _TrimesterCard extends StatelessWidget {
           children: [
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Trimester $trimester', style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Trimester $trimester',
+                      style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                    ),
+                    // DIUBAH: Tampilkan total minggu kehamilan saat ini
+                    Text(
+                      'Minggu ke $currentWeek',
+                      style: TextStyle(fontSize: 12, color: Colors.grey.shade400, height: 0.8),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 50),
                 Row(
                   children: [
-                    const Icon(Icons.calendar_today, size: 16, color: Colors.pink),
+                    // DIUBAH: Gunakan warna primer dari tema
+                    Icon(Iconsax.calendar_1, size: 18, color: Theme.of(context).colorScheme.primary),
                     const SizedBox(width: 8),
-                    Text(formattedDate),
+                    Text(formattedDate, style: const TextStyle(fontSize: 12)),
                   ],
                 ),
               ],
             ),
-            Text('Minggu ke $weekInTrimester', style: TextStyle(fontSize: 16, color: Colors.grey.shade400)),
             const SizedBox(height: 16),
             LinearProgressIndicator(
               value: progress,
               minHeight: 10,
               borderRadius: BorderRadius.circular(5),
               backgroundColor: Colors.grey.shade800,
-              valueColor: const AlwaysStoppedAnimation<Color>(Colors.pink),
+              // DIUBAH: Gunakan warna primer dari tema
+              valueColor: AlwaysStoppedAnimation<Color>(Theme.of(context).colorScheme.primary),
             ),
           ],
         ),
