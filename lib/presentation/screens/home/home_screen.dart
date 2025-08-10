@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:bundacare/core/injection_container.dart' as di;
+import 'package:bundacare/domain/entities/food_log.dart'; // Import entitas FoodLog
 import 'package:bundacare/presentation/bloc/food/food_bloc.dart';
 
 class HomeScreen extends StatelessWidget {
@@ -9,7 +10,6 @@ class HomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // BlocProvider menyediakan FoodBloc ke widget tree di bawahnya
     return BlocProvider(
       create: (context) => di.sl<FoodBloc>()..add(FetchTodaysFood()),
       child: Scaffold(
@@ -30,50 +30,80 @@ class HomeScreen extends StatelessWidget {
             ),
           ],
         ),
-        body: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0),
-          // Widget RefreshIndicator untuk fungsionalitas pull-to-refresh
-          child: RefreshIndicator(
-            onRefresh: () async {
-              context.read<FoodBloc>().add(FetchTodaysFood());
-            },
-            child: ListView( // Menggunakan ListView agar bisa di-scroll
-              children: [
-                const SizedBox(height: 16),
-                const Text("Ringkasan Hari Ini", style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
-                const SizedBox(height: 16),
-                BlocBuilder<FoodBloc, FoodState>(
-                  builder: (context, state) {
-                    if (state is FoodLoading && state is! FoodLoaded) {
-                      return const Center(child: CircularProgressIndicator());
-                    }
-                    if (state is FoodLoaded) {
-                      return Column(
-                        children: [
-                          _buildNutritionCard('Kalori', state.totalCalories, 2500, 'kcal'),
-                          _buildNutritionCard('Protein', state.totalProtein, 181, 'g'),
-                          _buildNutritionCard('Karbo', state.totalCarbohydrate, 362, 'g'),
-                          _buildNutritionCard('Lemak', state.totalFat, 80, 'g'),
-                        ],
+        body: RefreshIndicator(
+          onRefresh: () async {
+            context.read<FoodBloc>().add(FetchTodaysFood());
+          },
+          child: ListView(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            children: [
+              const SizedBox(height: 16),
+              const Text("Ringkasan Hari Ini", style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 16),
+              // --- Bagian Ringkasan Nutrisi (TETAP SAMA) ---
+              BlocBuilder<FoodBloc, FoodState>(
+                builder: (context, state) {
+                  if (state is FoodLoading && state is! FoodLoaded) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+                  if (state is FoodLoaded) {
+                    return Column(
+                      children: [
+                        _buildNutritionCard('Kalori', state.totalCalories, 2500, 'kcal'),
+                        _buildNutritionCard('Protein', state.totalProtein, 181, 'g'),
+                        _buildNutritionCard('Karbo', state.totalCarbohydrate, 362, 'g'),
+                        _buildNutritionCard('Lemak', state.totalFat, 80, 'g'),
+                      ],
+                    );
+                  }
+                  if (state is FoodError) {
+                    return Center(child: Text('Gagal memuat data: ${state.message}'));
+                  }
+                  return const Center(child: Text("Tarik ke bawah untuk refresh."));
+                },
+              ),
+              const SizedBox(height: 24),
+              const Text("Makanan Hari Ini", style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 16),
+              // --- BAGIAN BARU: DAFTAR MAKANAN ---
+              BlocBuilder<FoodBloc, FoodState>(
+                builder: (context, state) {
+                  if (state is FoodLoaded) {
+                    if (state.foodLogs.isEmpty) {
+                      return const Center(
+                        child: Padding(
+                          padding: EdgeInsets.all(32.0),
+                          child: Text("Belum ada makanan yang dicatat hari ini."),
+                        ),
                       );
                     }
-                    if (state is FoodError) {
-                      return Center(child: Text('Gagal memuat data: ${state.message}'));
-                    }
-                    // Tampilkan state awal atau jika data kosong
-                    return const Center(child: Text("Tarik ke bawah untuk refresh."));
-                  },
-                ),
-                const SizedBox(height: 24),
-                const Text("Makanan Hari Ini", style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
-                const SizedBox(height: 16),
-                // Di sini nanti kita akan menampilkan daftar makanan
-              ],
-            ),
+                    // Tampilkan GridView jika ada data
+                    return GridView.builder(
+                      shrinkWrap: true, // Penting agar GridView bisa di dalam ListView
+                      physics: const NeverScrollableScrollPhysics(), // Nonaktifkan scroll GridView
+                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 2, // 2 kolom
+                        crossAxisSpacing: 12, // Jarak horizontal
+                        mainAxisSpacing: 12,  // Jarak vertikal
+                        childAspectRatio: 0.8, // Rasio lebar:tinggi untuk setiap item
+                      ),
+                      itemCount: state.foodLogs.length,
+                      itemBuilder: (context, index) {
+                        final foodLog = state.foodLogs[index];
+                        return _buildFoodItemCard(foodLog);
+                      },
+                    );
+                  }
+                  // Tampilkan state loading atau error
+                  return const SizedBox.shrink(); // Widget kosong jika belum loaded
+                },
+              ),
+              const SizedBox(height: 24), // Beri jarak di bawah
+            ],
           ),
         ),
         bottomNavigationBar: BottomNavigationBar(
-          items: const <BottomNavigationBarItem>[
+           items: const <BottomNavigationBarItem>[
             BottomNavigationBarItem(
               icon: Icon(Icons.home),
               label: 'Home',
@@ -87,29 +117,23 @@ class HomeScreen extends StatelessWidget {
               label: 'Profile',
             ),
           ],
-          currentIndex: 0, // Set index ke 0 untuk Home
+          currentIndex: 0, 
           onTap: (index) {
             if (index == 2) {
               context.go('/profile');
             }
-            // TODO: Handle navigasi untuk kamera (index 1)
           },
         ),
       ),
     );
   }
 
-  // Widget helper untuk membuat kartu nutrisi
+  // --- Widget Helper untuk Kartu Nutrisi (TETAP SAMA) ---
   Widget _buildNutritionCard(String title, double value, double target, String unit) {
-    // Hardcode nilai target sesuai desain Anda untuk sementara
     final targetValues = {
-      'Kalori': 289.7,
-      'Protein': 181.0,
-      'Karbo': 362.0,
-      'Lemak': 80.0,
+      'Kalori': 289.7, 'Protein': 181.0, 'Karbo': 362.0, 'Lemak': 80.0,
     };
     target = targetValues[title] ?? target;
-
     return Card(
       clipBehavior: Clip.antiAlias,
       margin: const EdgeInsets.symmetric(vertical: 6.0),
@@ -129,12 +153,91 @@ class HomeScreen extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             LinearProgressIndicator(
-              value: (target > 0) ? (value / target) : 0.0,
-              minHeight: 6,
+              value: (target > 0) ? (value / target) : 0.0, minHeight: 6,
               borderRadius: BorderRadius.circular(3),
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  // --- WIDGET HELPER BARU: KARTU ITEM MAKANAN ---
+  Widget _buildFoodItemCard(FoodLog foodLog) {
+    return Card(
+      clipBehavior: Clip.antiAlias,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Stack(
+        alignment: Alignment.bottomCenter,
+        children: [
+          // Gambar Makanan
+          Positioned.fill(
+            child: Image.network(
+              foodLog.imageUrl,
+              fit: BoxFit.cover,
+              // Tampilkan loading indicator saat gambar dimuat
+              loadingBuilder: (context, child, loadingProgress) {
+                if (loadingProgress == null) return child;
+                return const Center(child: CircularProgressIndicator());
+              },
+              // Tampilkan icon error jika gambar gagal dimuat
+              errorBuilder: (context, error, stackTrace) {
+                return const Center(child: Icon(Icons.image_not_supported, color: Colors.grey, size: 40));
+              },
+            ),
+          ),
+          // Gradient hitam transparan di bawah
+          Container(
+            height: 80,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.bottomCenter,
+                end: Alignment.topCenter,
+                colors: [
+                  Colors.black.withOpacity(0.8),
+                  Colors.transparent,
+                ],
+              ),
+            ),
+          ),
+          // Teks Kalori di atas kiri
+          Positioned(
+            top: 8,
+            left: 8,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+              decoration: BoxDecoration(
+                color: Colors.black.withOpacity(0.5),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.local_fire_department, color: Colors.orange, size: 14),
+                  const SizedBox(width: 4),
+                  Text(
+                    '${foodLog.calories.toStringAsFixed(1)} kcal',
+                    style: const TextStyle(color: Colors.white, fontSize: 12),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          // Teks Nama Makanan di bawah
+          Padding(
+            padding: const EdgeInsets.all(12.0),
+            child: Text(
+              foodLog.foodName,
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
+              ),
+              textAlign: TextAlign.center,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ],
       ),
     );
   }
