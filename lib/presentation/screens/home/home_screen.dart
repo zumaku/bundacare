@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
+import 'package:iconsax/iconsax.dart';
 import 'package:intl/intl.dart';
 import 'package:bundacare/domain/entities/food_log.dart';
 import 'package:bundacare/domain/entities/user_profile.dart';
@@ -12,98 +14,122 @@ class HomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SafeArea(
-      child: RefreshIndicator(
-        onRefresh: () async {
-          // Saat ditarik, panggil ulang event untuk mengambil data makanan
-          context.read<FoodBloc>().add(FetchTodaysFood());
-        },
-        child: ListView(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0),
-          children: [
-            const SizedBox(height: 16),
-            const Text(
-              'BundaCare',
-              style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
+      // 1. Bungkus semuanya dengan Column untuk memisahkan app bar dan konten
+      child: Column(
+        children: [
+          // 2. Ini adalah App Bar Kustom kita (sekarang tidak bisa di-scroll)
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 16.0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Image.asset(
+                  'assets/logo/app_bar_logo.png',
+                  height: 35,
+                ),
+                IconButton(
+                  icon: const Icon(Iconsax.notification, size: 28),
+                  onPressed: () {
+                    context.push('/notifications');
+                  },
+                ),
+              ],
             ),
-            const SizedBox(height: 16),
+          ),
 
-            // --- KARTU TRIMESTER ---
-            BlocBuilder<AuthBloc, AuthState>(
-              builder: (context, state) {
-                if (state is Authenticated) {
-                  final UserProfile? profile = state.profile;
-                  if (profile != null && profile.pregnancyStartDate != null) {
-                    return _TrimesterCard(startDate: profile.pregnancyStartDate!);
-                  }
-                }
-                return const SizedBox.shrink();
+          // 3. Gunakan Expanded agar ListView mengisi sisa ruang yang tersedia
+          Expanded(
+            child: RefreshIndicator(
+              onRefresh: () async {
+                context.read<FoodBloc>().add(FetchTodaysFood());
               },
-            ),
-            const SizedBox(height: 24),
-
-            // --- RINGKASAN NUTRISI ---
-            const Text("Ringkasan Hari Ini", style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 16),
-            BlocBuilder<FoodBloc, FoodState>(
-              builder: (context, state) {
-                if (state is FoodLoaded) {
-                  return Column(
-                    children: [
-                      _buildNutritionCard('Kalori', state.totalCalories, 289.7, 'kcal'),
-                      _buildNutritionCard('Protein', state.totalProtein, 181, 'g'),
-                      _buildNutritionCard('Karbo', state.totalCarbohydrate, 362, 'g'),
-                      _buildNutritionCard('Lemak', state.totalFat, 80, 'g'),
-                    ],
-                  );
-                }
-                if (state is FoodError) {
-                  return Center(child: Text('Gagal memuat data: ${state.message}'));
-                }
-                return const Center(child: CircularProgressIndicator());
-              },
-            ),
-            const SizedBox(height: 24),
-
-            // --- DAFTAR MAKANAN HARI INI ---
-            const Text("Makanan Hari Ini", style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 16),
-            BlocBuilder<FoodBloc, FoodState>(
-              builder: (context, state) {
-                if (state is FoodLoaded) {
-                  if (state.foodLogs.isEmpty) {
-                    return const Center(
-                      child: Padding(
-                        padding: EdgeInsets.all(32.0),
-                        child: Text("Belum ada makanan yang dicatat hari ini."),
-                      ),
-                    );
-                  }
-                  return GridView.builder(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2,
-                      crossAxisSpacing: 12,
-                      mainAxisSpacing: 12,
-                      childAspectRatio: 0.8,
-                    ),
-                    itemCount: state.foodLogs.length,
-                    itemBuilder: (context, index) {
-                      final foodLog = state.foodLogs[index];
-                      return _buildFoodItemCard(foodLog);
+              child: ListView(
+                // Padding di sini hanya untuk sisi kiri dan kanan
+                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                children: [
+                  // Kita tidak perlu lagi SizedBox di atas
+                  
+                  // --- KARTU TRIMESTER ---
+                  BlocBuilder<AuthBloc, AuthState>(
+                    builder: (context, state) {
+                      if (state is Authenticated) {
+                        final UserProfile? profile = state.profile;
+                        if (profile != null && profile.pregnancyStartDate != null) {
+                          return _TrimesterCard(startDate: profile.pregnancyStartDate!);
+                        }
+                      }
+                      return const SizedBox.shrink();
                     },
-                  );
-                }
-                return const SizedBox.shrink();
-              },
+                  ),
+                  const SizedBox(height: 24),
+
+                  // --- RINGKASAN NUTRISI ---
+                  const Text("Ringkasan Hari Ini", style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 16),
+                  BlocBuilder<FoodBloc, FoodState>(
+                    builder: (context, state) {
+                      if (state is FoodLoaded) {
+                        return Column(
+                          children: [
+                            _buildNutritionCard('Kalori', state.totalCalories, 289.7, 'kcal'),
+                            _buildNutritionCard('Protein', state.totalProtein, 181, 'g'),
+                            _buildNutritionCard('Karbo', state.totalCarbohydrate, 362, 'g'),
+                            _buildNutritionCard('Lemak', state.totalFat, 80, 'g'),
+                          ],
+                        );
+                      }
+                      if (state is FoodError) {
+                        return Center(child: Text('Gagal memuat data: ${state.message}'));
+                      }
+                      return const Center(child: CircularProgressIndicator());
+                    },
+                  ),
+                  const SizedBox(height: 24),
+
+                  // --- DAFTAR MAKANAN HARI INI ---
+                  const Text("Makanan Hari Ini", style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 16),
+                  BlocBuilder<FoodBloc, FoodState>(
+                    builder: (context, state) {
+                      if (state is FoodLoaded) {
+                        if (state.foodLogs.isEmpty) {
+                          return const Center(
+                            child: Padding(
+                              padding: EdgeInsets.all(32.0),
+                              child: Text("Belum ada makanan yang dicatat hari ini."),
+                            ),
+                          );
+                        }
+                        return GridView.builder(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 2,
+                            crossAxisSpacing: 12,
+                            mainAxisSpacing: 12,
+                            childAspectRatio: 0.8,
+                          ),
+                          itemCount: state.foodLogs.length,
+                          itemBuilder: (context, index) {
+                            final foodLog = state.foodLogs[index];
+                            return _buildFoodItemCard(foodLog);
+                          },
+                        );
+                      }
+                      return const SizedBox.shrink();
+                    },
+                  ),
+                  const SizedBox(height: 24), // Padding bawah untuk scroll
+                ],
+              ),
             ),
-            const SizedBox(height: 24),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
 }
+
 
 //==============================================================================
 // WIDGET HELPER DI BAWAH INI

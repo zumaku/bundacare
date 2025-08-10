@@ -17,6 +17,7 @@ class BundaCareApp extends StatelessWidget {
         routerConfig: AppRouter.router,
         theme: ThemeData(
           brightness: Brightness.dark,
+          fontFamily: 'Poppins',
         ),
       ),
     );

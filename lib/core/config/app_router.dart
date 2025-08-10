@@ -9,6 +9,7 @@ import 'package:bundacare/presentation/screens/profile/profile_screen.dart';
 import 'package:bundacare/presentation/screens/camera/camera_screen.dart';
 import 'package:bundacare/presentation/screens/main_shell.dart';
 import 'package:bundacare/core/services/supabase_service.dart';
+import 'package:bundacare/presentation/screens/notification/notification_screen.dart'; // <-- Import
 
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
 
@@ -21,6 +22,11 @@ class AppRouter {
         path: '/login',
         builder: (context, state) => const LoginScreen(),
       ),
+      GoRoute(
+        path: '/notifications',
+        builder: (context, state) => const NotificationScreen(),
+      ),
+
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) {
           // ================== PERUBAHAN DI SINI ==================
