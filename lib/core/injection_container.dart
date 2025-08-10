@@ -1,3 +1,8 @@
+import 'package:bundacare/data/datasources/food_remote_data_source.dart';
+import 'package:bundacare/data/repositories/food_repository_impl.dart';
+import 'package:bundacare/domain/repositories/food_repository.dart';
+import 'package:bundacare/domain/usecases/food/get_todays_food_logs.dart';
+import 'package:bundacare/presentation/bloc/food/food_bloc.dart';
 import 'package:get_it/get_it.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:dio/dio.dart';
@@ -33,4 +38,21 @@ Future<void> init() async {
   // Data Sources
   sl.registerLazySingleton<AuthRemoteDataSource>(
       () => AuthRemoteDataSourceImpl());
+
+  // ============================================================================
+
+  // FITUR FOOD
+  // BLoC
+  sl.registerFactory(() => FoodBloc(getTodaysFoodLogs: sl()));
+
+  // Use Cases
+  sl.registerLazySingleton(() => GetTodaysFoodLogs(sl()));
+
+  // Repository
+  sl.registerLazySingleton<FoodRepository>(
+      () => FoodRepositoryImpl(remoteDataSource: sl()));
+
+  // Data Sources
+  sl.registerLazySingleton<FoodRemoteDataSource>(
+      () => FoodRemoteDataSourceImpl());
 }
