@@ -17,7 +17,24 @@ class BundaCareApp extends StatelessWidget {
         routerConfig: AppRouter.router,
         theme: ThemeData(
           brightness: Brightness.dark,
-          fontFamily: 'Poppins',
+          
+          // 1. Atur Poppins sebagai font default
+          fontFamily: 'Poppins', 
+          
+          // 2. Atur skema warna utama
+          colorScheme: const ColorScheme.dark(
+            primary: Color(0xFFF035C5), // Warna pink Anda
+            secondary: Color(0xFFF035C5),
+            background: Color(0xFF121212), // Warna background gelap standar
+          ),
+          
+          // Styling tambahan (opsional)
+          scaffoldBackgroundColor: const Color(0xFF121212),
+          cardTheme: CardThemeData( // Diubah dari CardTheme
+            elevation: 2,
+            color: const Color(0xFF2C2C2C),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          ),
         ),
       ),
     );
