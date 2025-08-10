@@ -4,6 +4,7 @@ import 'package:bundacare/presentation/screens/camera/detection_result_modal.dar
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:image_picker/image_picker.dart'; // <-- 1. Import package image_picker
 import 'package:permission_handler/permission_handler.dart';
 
 class CameraScreen extends StatefulWidget {
@@ -51,11 +52,11 @@ class _CameraScreenState extends State<CameraScreen> {
     try {
       await _initializeControllerFuture;
       if (_controller == null || !_controller!.value.isInitialized) return;
-      if (!mounted) return; // FIX: Cek `mounted` sebelum async gap
+      if (!mounted) return;
 
       final image = await _controller!.takePicture();
       
-      if (!mounted) return; // FIX: Cek `mounted` lagi setelah async gap
+      if (!mounted) return;
       _processImage(File(image.path));
 
     } catch (e) {
@@ -63,7 +64,26 @@ class _CameraScreenState extends State<CameraScreen> {
     }
   }
 
+  // --- 2. METODE BARU UNTUK MEMILIH GAMBAR DARI GALERI ---
+  Future<void> _onPickImageFromGallery() async {
+    final ImagePicker picker = ImagePicker();
+    try {
+      // Buka galeri untuk memilih gambar
+      final XFile? image = await picker.pickImage(source: ImageSource.gallery);
+
+      // Jika pengguna memilih sebuah gambar
+      if (image != null) {
+        if (!mounted) return;
+        _processImage(File(image.path));
+      }
+    } catch (e) {
+      debugPrint("Error picking image from gallery: $e");
+    }
+  }
+  // --------------------------------------------------------
+
   void _processImage(File imageFile) {
+    // Metode ini tetap sama, sekarang bisa dipanggil dari kamera atau galeri
     final foodBloc = context.read<FoodBloc>();
     showModalBottomSheet(
       context: context,
@@ -120,10 +140,12 @@ class _CameraScreenState extends State<CameraScreen> {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
+            // --- 3. SAMBUNGKAN METODE BARU KE TOMBOL GALERI ---
             IconButton(
-              onPressed: () {},
+              onPressed: _onPickImageFromGallery, // <-- Diubah
               icon: const Icon(Icons.photo_library, color: Colors.white, size: 30),
             ),
+            // -------------------------------------------------
             GestureDetector(
               onTap: _onTakePicture,
               child: Container(
