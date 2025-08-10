@@ -1,30 +1,22 @@
+import 'package:bundacare/data/datasources/auth_remote_data_source.dart';
+import 'package:bundacare/domain/repositories/auth_repository.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../../domain/repositories/auth_repository.dart';
-import '../../domain/entities/user_entity.dart';
 
 class AuthRepositoryImpl implements AuthRepository {
-  final _client = Supabase.instance.client;
+  final AuthRemoteDataSource remoteDataSource;
+
+  AuthRepositoryImpl({required this.remoteDataSource});
 
   @override
-  Future<UserEntity?> signInWithGoogle() async {
-    // Supabase OAuth flow; mobile/web functional differences exist.
-    await _client.auth.signInWithOAuth(OAuthProvider.google);
-    return getCurrentUser();
-  }
-
-  @override
-  Future<UserEntity?> getCurrentUser() async {
-    final user = _client.auth.currentUser;
-    if (user == null) return null;
-    return UserEntity(
-      id: user.id,
-      email: user.email,
-      avatarUrl: user.userMetadata?['avatar_url'],
-    );
+  Future<void> signInWithGoogle() async {
+    await remoteDataSource.signInWithGoogle();
   }
 
   @override
   Future<void> signOut() async {
-    await _client.auth.signOut();
+    await remoteDataSource.signOut();
   }
+  
+  @override
+  User? get currentUser => remoteDataSource.currentUser;
 }

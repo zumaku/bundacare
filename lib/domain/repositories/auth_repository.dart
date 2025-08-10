@@ -1,7 +1,7 @@
-import '../entities/user_entity.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 abstract class AuthRepository {
-  Future<UserEntity?> signInWithGoogle();
+  Future<void> signInWithGoogle();
   Future<void> signOut();
-  Future<UserEntity?> getCurrentUser();
+  User? get currentUser;
 }
