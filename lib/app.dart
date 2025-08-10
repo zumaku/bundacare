@@ -25,13 +25,13 @@ class BundaCareApp extends StatelessWidget {
           colorScheme: const ColorScheme.dark(
             primary: Color(0xFFF035C5), // Warna pink Anda
             secondary: Color(0xFFF035C5),
-            background: Color(0xFF121212), // Warna background gelap standar
           ),
           
           // Styling tambahan (opsional)
-          scaffoldBackgroundColor: const Color(0xFF121212),
+          scaffoldBackgroundColor: const Color(0xFF292929),
+
           cardTheme: CardThemeData( // Diubah dari CardTheme
-            elevation: 2,
+            elevation: 0,
             color: const Color(0xFF2C2C2C),
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           ),

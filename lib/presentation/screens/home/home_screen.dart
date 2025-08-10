@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:intl/intl.dart';
@@ -8,75 +9,61 @@ import 'package:bundacare/domain/entities/user_profile.dart';
 import 'package:bundacare/presentation/bloc/auth/auth_bloc.dart';
 import 'package:bundacare/presentation/bloc/food/food_bloc.dart';
 
+// Definisikan warna-warna custom agar mudah dikelola
+const Color cardBackgroundColor = Color(0xFF353535);
+const Color innerCardBackgroundColor = Color(0xFF292929);
+const Color progressBarBackgroundColor = Color(0xFF353535);
+const Color calorieColor = Color(0xFFE66400);
+const Color proteinColor = Color(0xFF0CE600);
+const Color carbsColor = Color(0xFFE6E600);
+const Color fatColor = Color(0xFFA13E00);
+
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
     return SafeArea(
-      // 1. Bungkus semuanya dengan Column untuk memisahkan app bar dan konten
       child: Column(
         children: [
-          // 2. Ini adalah App Bar Kustom kita (sekarang tidak bisa di-scroll)
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 16.0),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Image.asset(
-                  'assets/logo/app_bar_logo.png',
+                SvgPicture.asset(
+                  'assets/logo/app_bar_logo.svg',
                   height: 35,
                 ),
                 IconButton(
                   icon: const Icon(Iconsax.notification, size: 28),
-                  onPressed: () {
-                    context.push('/notifications');
-                  },
+                  onPressed: () => context.go('/notifications'),
                 ),
               ],
             ),
           ),
-
-          // 3. Gunakan Expanded agar ListView mengisi sisa ruang yang tersedia
           Expanded(
             child: RefreshIndicator(
               onRefresh: () async {
                 context.read<FoodBloc>().add(FetchTodaysFood());
               },
               child: ListView(
-                // Padding di sini hanya untuk sisi kiri dan kanan
                 padding: const EdgeInsets.symmetric(horizontal: 16.0),
                 children: [
-                  // Kita tidak perlu lagi SizedBox di atas
-                  
-                  // --- KARTU TRIMESTER ---
                   BlocBuilder<AuthBloc, AuthState>(
                     builder: (context, state) {
-                      if (state is Authenticated) {
-                        final UserProfile? profile = state.profile;
-                        if (profile != null && profile.pregnancyStartDate != null) {
-                          return _TrimesterCard(startDate: profile.pregnancyStartDate!);
-                        }
+                      if (state is Authenticated && state.profile?.pregnancyStartDate != null) {
+                        return _TrimesterCard(startDate: state.profile!.pregnancyStartDate!);
                       }
                       return const SizedBox.shrink();
                     },
                   ),
                   const SizedBox(height: 24),
-
-                  // --- RINGKASAN NUTRISI ---
-                  const Text("Ringkasan Hari Ini", style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 16),
+                  
                   BlocBuilder<FoodBloc, FoodState>(
                     builder: (context, state) {
                       if (state is FoodLoaded) {
-                        return Column(
-                          children: [
-                            _buildNutritionCard('Kalori', state.totalCalories, 289.7, 'kcal'),
-                            _buildNutritionCard('Protein', state.totalProtein, 181, 'g'),
-                            _buildNutritionCard('Karbo', state.totalCarbohydrate, 362, 'g'),
-                            _buildNutritionCard('Lemak', state.totalFat, 80, 'g'),
-                          ],
-                        );
+                        return _buildNutritionSection(context, state);
                       }
                       if (state is FoodError) {
                         return Center(child: Text('Gagal memuat data: ${state.message}'));
@@ -84,10 +71,9 @@ class HomeScreen extends StatelessWidget {
                       return const Center(child: CircularProgressIndicator());
                     },
                   ),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 16),
 
-                  // --- DAFTAR MAKANAN HARI INI ---
-                  const Text("Makanan Hari Ini", style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+                  Padding(padding: EdgeInsets.symmetric(horizontal: 4), child: Text("Makanan Hari Ini", style: TextStyle(fontSize: 16))),
                   const SizedBox(height: 16),
                   BlocBuilder<FoodBloc, FoodState>(
                     builder: (context, state) {
@@ -104,10 +90,7 @@ class HomeScreen extends StatelessWidget {
                           shrinkWrap: true,
                           physics: const NeverScrollableScrollPhysics(),
                           gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 2,
-                            crossAxisSpacing: 12,
-                            mainAxisSpacing: 12,
-                            childAspectRatio: 0.8,
+                            crossAxisCount: 2, crossAxisSpacing: 12, mainAxisSpacing: 12, childAspectRatio: 0.8,
                           ),
                           itemCount: state.foodLogs.length,
                           itemBuilder: (context, index) {
@@ -119,7 +102,7 @@ class HomeScreen extends StatelessWidget {
                       return const SizedBox.shrink();
                     },
                   ),
-                  const SizedBox(height: 24), // Padding bawah untuk scroll
+                  const SizedBox(height: 100),
                 ],
               ),
             ),
@@ -129,7 +112,6 @@ class HomeScreen extends StatelessWidget {
     );
   }
 }
-
 
 //==============================================================================
 // WIDGET HELPER DI BAWAH INI
@@ -170,8 +152,8 @@ class _TrimesterCard extends StatelessWidget {
 
     return Card(
       clipBehavior: Clip.antiAlias,
-      // Gunakan warna dari tema kartu yang sudah kita atur
-      color: Theme.of(context).cardTheme.color,
+      elevation: 0,
+      color: cardBackgroundColor,
       shape: Theme.of(context).cardTheme.shape,
       child: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -223,29 +205,176 @@ class _TrimesterCard extends StatelessWidget {
   }
 }
 
-Widget _buildNutritionCard(String title, double value, double target, String unit) {
-  return Card(
-    clipBehavior: Clip.antiAlias,
-    margin: const EdgeInsets.symmetric(vertical: 6.0),
-    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-    child: Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+Widget _buildNutritionSection(BuildContext context, FoodLoaded state) {
+  final double targetKalori = 290;
+  final double targetProtein = 181;
+  final double targetKarbo = 362;
+  final double targetLemak = 80;
+
+  return Column(
+    children: [
+      Card(
+        color: cardBackgroundColor,
+        child: Padding(
+          padding: const EdgeInsets.all(6.0),
+          child: Column(
             children: [
-              Text(title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
-              Text('${value.toStringAsFixed(1)} / ${target.toStringAsFixed(1)} $unit',
-                  style: const TextStyle(fontSize: 16)),
+              Padding(padding: EdgeInsets.all(6.0), child: _buildSectionHeader(context, icon: Iconsax.diagram, title: 'Total', color: calorieColor)),
+              const SizedBox(height: 8),
+              _buildNutritionRow(
+                iconAssetPath: 'assets/icons/calorie_icon.svg',
+                title: 'Kalori',
+                color: calorieColor,
+                value: state.totalCalories,
+                target: targetKalori,
+                unit: 'kcal',
+              ),
             ],
           ),
-          const SizedBox(height: 8),
-          LinearProgressIndicator(
-            value: (target > 0) ? (value / target) : 0.0,
-            minHeight: 6,
-            borderRadius: BorderRadius.circular(3),
+        ),
+      ),
+      const SizedBox(height: 16),
+      Card(
+        color: cardBackgroundColor,
+        child: Padding(
+          padding: const EdgeInsets.all(6.0),
+          child: Column(
+            children: [
+              Padding(padding: EdgeInsets.all(6.0), child: _buildSectionHeader(context, icon: Iconsax.graph, title: 'Makro', color: Theme.of(context).colorScheme.primary)),
+              const SizedBox(height: 4),
+              _buildNutritionRow(
+                iconAssetPath: 'assets/icons/protein_icon.svg',
+                title: 'Protein',
+                color: proteinColor,
+                value: state.totalProtein,
+                target: targetProtein,
+                unit: 'g',
+              ),
+              const SizedBox(height: 6),
+              _buildNutritionRow(
+                iconAssetPath: 'assets/icons/carb_icon.svg',
+                title: 'Karbo',
+                color: carbsColor,
+                value: state.totalCarbohydrate,
+                target: targetKarbo,
+                unit: 'g',
+              ),
+              const SizedBox(height: 6),
+              _buildNutritionRow(
+                iconAssetPath: 'assets/icons/fat_icon.svg',
+                title: 'Lemak',
+                color: fatColor,
+                value: state.totalFat,
+                target: targetLemak,
+                unit: 'g',
+              ),
+            ],
+          ),
+        ),
+      ),
+    ],
+  );
+}
+
+// WIDGET HELPER BARU UNTUK HEADER (Total & Makro)
+Widget _buildSectionHeader(BuildContext context, {required IconData icon, required String title, required Color color}) {
+  return Row(
+    children: [
+      Icon(icon, color: color, size: 20),
+      const SizedBox(width: 8),
+      Text(title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+      const Spacer(),
+      const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
+    ],
+  );
+}
+
+// WIDGET HELPER BARU UNTUK BARIS NUTRISI
+Widget _buildNutritionRow({
+  required String iconAssetPath,
+  required String title,
+  required Color color,
+  required double value,
+  required double target,
+  required String unit,
+}) {
+  final double percentage = (target > 0) ? (value / target) : 0.0;
+
+  return Card(
+    color: innerCardBackgroundColor,
+    elevation: 0,
+    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+    child: Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6.0, horizontal: 8.0),
+      child: Row(
+        children: [
+          // Icon
+          Container(
+            width: 40,
+            height: 40,
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: color.withOpacity(0.3),
+              borderRadius: BorderRadius.circular(50),
+            ),
+            child: SvgPicture.asset(
+              iconAssetPath,
+              colorFilter: ColorFilter.mode(color, BlendMode.srcIn),
+            ),
+          ),
+          const SizedBox(width: 12),
+          // Judul dan Progress Bar
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                const SizedBox(height: 8),
+                // 1. Bungkus Progress Bar dan Persentase dengan Row
+                Row(
+                  children: [
+                    // Progress bar sekarang akan mengambil sisa ruang
+                    Expanded(
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(4),
+                        child: LinearProgressIndicator(
+                          value: percentage.clamp(0.0, 1.0),
+                          minHeight: 8,
+                          backgroundColor: progressBarBackgroundColor,
+                          valueColor: AlwaysStoppedAnimation<Color>(color),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    // Teks Persentase di sampingnya
+                    Text(
+                      '${(percentage * 100).toStringAsFixed(0)}%',
+                      style: TextStyle(fontSize: 12, color: Colors.grey.shade400),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 12),
+          // 2. Beri lebar tetap pada container teks nilai
+          SizedBox(
+            width: 110, // Lebar tetap untuk konsistensi
+            child: Text.rich(
+              TextSpan(
+                children: [
+                  TextSpan(
+                    text: '${value.toStringAsFixed(1)}/${target.toStringAsFixed(0)}',
+                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
+                  TextSpan(
+                    text: ' $unit',
+                    style: TextStyle(fontSize: 14, color: Colors.grey.shade400),
+                  ),
+                ]
+              ),
+              textAlign: TextAlign.end,
+            ),
           ),
         ],
       ),
