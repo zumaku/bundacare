@@ -1,6 +1,7 @@
 import 'package:bundacare/data/datasources/food_remote_data_source.dart';
 import 'package:bundacare/data/repositories/food_repository_impl.dart';
 import 'package:bundacare/domain/repositories/food_repository.dart';
+import 'package:bundacare/domain/usecases/auth/get_user_profile.dart';
 import 'package:bundacare/domain/usecases/food/get_todays_food_logs.dart';
 import 'package:bundacare/presentation/bloc/food/food_bloc.dart';
 import 'package:get_it/get_it.dart';
@@ -24,12 +25,14 @@ Future<void> init() async {
   sl.registerFactory(() => AuthBloc(
     signInWithGoogle: sl(),
     signOut: sl(),
+    getUserProfile: sl(),
     supabaseClient: sl(),
   ));
 
   // Use Cases
   sl.registerLazySingleton(() => SignInWithGoogle(sl()));
   sl.registerLazySingleton(() => SignOut(sl())); // Jangan lupa buat filenya
+  sl.registerLazySingleton(() => GetUserProfile(sl()));
 
   // Repositories
   sl.registerLazySingleton<AuthRepository>(

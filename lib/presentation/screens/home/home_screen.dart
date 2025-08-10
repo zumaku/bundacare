@@ -1,9 +1,11 @@
+import 'package:bundacare/presentation/bloc/auth/auth_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:bundacare/core/injection_container.dart' as di;
 import 'package:bundacare/domain/entities/food_log.dart'; // Import entitas FoodLog
 import 'package:bundacare/presentation/bloc/food/food_bloc.dart';
+import 'package:intl/intl.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -37,6 +39,16 @@ class HomeScreen extends StatelessWidget {
           child: ListView(
             padding: const EdgeInsets.symmetric(horizontal: 16.0),
             children: [
+              const SizedBox(height: 16),
+              // -- KARTU TRIMESTER --
+              BlocBuilder<AuthBloc, AuthState>(
+                builder: (context, state) {
+                  if (state is Authenticated && state.profile?.pregnancyStartDate != null) {
+                    return _TrimesterCard(startDate: state.profile!.pregnancyStartDate!);
+                  }
+                  return const SizedBox.shrink(); // Widget kosong jika data belum siap
+                },
+              ),
               const SizedBox(height: 16),
               const Text("Ringkasan Hari Ini", style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
               const SizedBox(height: 16),
@@ -238,6 +250,77 @@ class HomeScreen extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+// -- WIDGET BARU UNTUK KARTU TRIMESTER --
+class _TrimesterCard extends StatelessWidget {
+  final DateTime startDate;
+
+  const _TrimesterCard({required this.startDate});
+
+  @override
+  Widget build(BuildContext context) {
+    // --- Logika Perhitungan ---
+    final now = DateTime.now();
+    final daysPassed = now.difference(startDate).inDays;
+    final currentWeek = (daysPassed / 7).floor() + 1;
+
+    int trimester;
+    int weekInTrimester;
+    int totalWeeksInTrimester;
+    
+    if (currentWeek <= 13) {
+      trimester = 1;
+      weekInTrimester = currentWeek;
+      totalWeeksInTrimester = 13;
+    } else if (currentWeek <= 27) {
+      trimester = 2;
+      weekInTrimester = currentWeek - 13;
+      totalWeeksInTrimester = 14; // 27 - 13
+    } else {
+      trimester = 3;
+      weekInTrimester = currentWeek - 27;
+      totalWeeksInTrimester = 13; // 40 - 27
+    }
+
+    final progress = weekInTrimester / totalWeeksInTrimester;
+    final formattedDate = DateFormat('dd/MM/yy').format(now);
+
+    return Card(
+      clipBehavior: Clip.antiAlias,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text('Trimester $trimester', style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+                Row(
+                  children: [
+                    const Icon(Icons.calendar_today, size: 16, color: Colors.pink),
+                    const SizedBox(width: 8),
+                    Text(formattedDate),
+                  ],
+                ),
+              ],
+            ),
+            Text('Minggu ke $weekInTrimester', style: TextStyle(fontSize: 16, color: Colors.grey.shade400)),
+            const SizedBox(height: 16),
+            LinearProgressIndicator(
+              value: progress,
+              minHeight: 10,
+              borderRadius: BorderRadius.circular(5),
+              backgroundColor: Colors.grey.shade800,
+              valueColor: const AlwaysStoppedAnimation<Color>(Colors.pink),
+            ),
+          ],
+        ),
       ),
     );
   }

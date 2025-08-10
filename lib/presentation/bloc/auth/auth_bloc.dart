@@ -1,5 +1,7 @@
 import 'dart:async';
 import 'package:bloc/bloc.dart';
+import 'package:bundacare/domain/entities/user_profile.dart';
+import 'package:bundacare/domain/usecases/auth/get_user_profile.dart';
 import 'package:equatable/equatable.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' as supabase; // <-- Ganti import dengan alias
 import 'package:bundacare/domain/usecases/auth/sign_in_with_google.dart';
@@ -11,15 +13,18 @@ part 'auth_state.dart';
 class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final SignInWithGoogle _signInWithGoogle;
   final SignOut _signOut;
+  final GetUserProfile _getUserProfile;
   // Gunakan tipe dari package supabase
   late final StreamSubscription<supabase.AuthState> _authStateSubscription; 
 
   AuthBloc({
     required SignInWithGoogle signInWithGoogle,
     required SignOut signOut,
+    required GetUserProfile getUserProfile,
     required supabase.SupabaseClient supabaseClient, // Gunakan alias
   })  : _signInWithGoogle = signInWithGoogle,
         _signOut = signOut,
+        _getUserProfile = getUserProfile,
         super(AuthInitial()) {
 
     _authStateSubscription = supabaseClient.auth.onAuthStateChange.listen((data) {
@@ -41,10 +46,16 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       await _signOut();
     });
 
-    on<_AuthUserChanged>((event, emit) {
+    on<_AuthUserChanged>((event, emit) async { // Jadikan async
       if (event.user != null) {
-        // user adalah supabase.User
-        emit(Authenticated(event.user!)); 
+        try {
+          // Saat user berubah (login), ambil profilnya
+          final profile = await _getUserProfile();
+          emit(Authenticated(event.user!, profile: profile));
+        } catch (e) {
+          // Jika gagal ambil profil, tetap autentikasi tapi tanpa profil
+          emit(Authenticated(event.user!)); 
+        }
       } else {
         emit(const Unauthenticated());
       }

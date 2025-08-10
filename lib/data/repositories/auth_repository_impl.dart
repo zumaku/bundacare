@@ -1,4 +1,5 @@
 import 'package:bundacare/data/datasources/auth_remote_data_source.dart';
+import 'package:bundacare/domain/entities/user_profile.dart';
 import 'package:bundacare/domain/repositories/auth_repository.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -19,4 +20,9 @@ class AuthRepositoryImpl implements AuthRepository {
   
   @override
   User? get currentUser => remoteDataSource.currentUser;
+
+  @override
+  Future<UserProfile> getUserProfile() async {
+    return await remoteDataSource.getUserProfile();
+  }
 }

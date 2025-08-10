@@ -13,11 +13,12 @@ class AuthLoading extends AuthState {}
 
 class Authenticated extends AuthState {
   final supabase.User user; // <-- Gunakan tipe User dari Supabase
+  final UserProfile? profile;
 
-  const Authenticated(this.user);
+  const Authenticated(this.user, {this.profile});
 
   @override
-  List<Object?> get props => [user];
+  List<Object?> get props => [user, profile];
 }
 
 class Unauthenticated extends AuthState {
