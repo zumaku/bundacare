@@ -71,9 +71,18 @@ class HomeScreen extends StatelessWidget {
                       return const Center(child: CircularProgressIndicator());
                     },
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 20),
 
-                  Padding(padding: EdgeInsets.symmetric(horizontal: 4), child: Text("Makanan Hari Ini", style: TextStyle(fontSize: 16))),
+                  Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 4),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text("Makanan Hari Ini", style: TextStyle(fontSize: 16)),
+                        const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
+                      ],
+                    )
+                  ),
                   const SizedBox(height: 16),
                   BlocBuilder<FoodBloc, FoodState>(
                     builder: (context, state) {

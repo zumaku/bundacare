@@ -1,4 +1,5 @@
 TODO:
 
-1. Preview image makanan hari ini
-2. Halaman Detail Makanan Hari ini
+1. Halaman Camera
+2. Preview image makanan hari ini
+3. Halaman Detail Makanan Hari ini
