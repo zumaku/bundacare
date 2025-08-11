@@ -38,7 +38,7 @@ class DetectionBloc extends Bloc<DetectionEvent, DetectionState> {
     on<DetectionSaveRequested>((event, emit) async {
       final currentState = state;
       if (currentState is DetectionSuccess) {
-        emit(DetectionLoading());
+        emit(DetectionSaveInProgress(currentState.result, currentState.imageUrl));
         try {
           final foodLog = FoodLog(
             id: 0,
@@ -53,7 +53,8 @@ class DetectionBloc extends Bloc<DetectionEvent, DetectionState> {
           await _saveFoodLog(foodLog);
           emit(DetectionSaveSuccess());
         } catch (e) {
-          emit(DetectionFailure(e.toString()));
+          // Jika gagal, kembali ke state Success agar UI tidak error
+          emit(DetectionSuccess(currentState.result, currentState.imageUrl));
         }
       }
     });

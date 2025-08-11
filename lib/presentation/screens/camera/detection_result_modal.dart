@@ -1,11 +1,13 @@
 import 'dart:io';
+import 'package:bundacare/domain/entities/nutrition_result.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:bundacare/core/injection_container.dart' as di;
-import 'package:bundacare/domain/repositories/detection_repository.dart'; // <-- 1. TAMBAHKAN IMPORT INI
+import 'package:bundacare/domain/repositories/detection_repository.dart';
 import 'package:bundacare/presentation/bloc/detection/detection_bloc.dart';
 import 'package:bundacare/presentation/bloc/food/food_bloc.dart';
 import 'package:intl/intl.dart';
+import 'package:iconsax/iconsax.dart';
 
 class DetectionResultModal extends StatefulWidget {
   final File imageFile;
@@ -21,14 +23,11 @@ class _DetectionResultModalState extends State<DetectionResultModal> {
 
   @override
   void dispose() {
-    // 2. UBAH LOGIKA DI DALAM DISPOSE
     if (_detectionBloc != null) {
       final currentState = _detectionBloc!.state;
       if (currentState is DetectionSuccess && !_isActionTaken) {
-        // Panggil repository secara langsung, bukan via event BLoC
         final detectionRepo = di.sl<DetectionRepository>();
         detectionRepo.deleteUploadedImage(currentState.imageUrl);
-        debugPrint("Modal dismissed, deleting orphaned image via repository: ${currentState.imageUrl}");
       }
     }
     super.dispose();
@@ -44,70 +43,42 @@ class _DetectionResultModalState extends State<DetectionResultModal> {
       child: BlocListener<DetectionBloc, DetectionState>(
         listener: (context, state) {
           if (state is DetectionSaveSuccess) {
-            _isActionTaken = true; 
+            _isActionTaken = true;
             context.read<FoodBloc>().add(FetchTodaysFood());
-            Navigator.of(context).pop();
+            if (mounted) Navigator.of(context).pop();
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(content: Text('Log makanan berhasil disimpan!'), backgroundColor: Colors.green),
             );
           }
           if (state is DetectionFailure) {
             _isActionTaken = true;
-             ScaffoldMessenger.of(context).showSnackBar(
+            if (mounted) Navigator.of(context).pop();
+            ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(content: Text('Error: ${state.message}'), backgroundColor: Colors.red),
             );
-             Navigator.of(context).pop();
           }
         },
         child: DraggableScrollableSheet(
-          initialChildSize: 0.85, maxChildSize: 0.85,
+          initialChildSize: 0.65,
+          maxChildSize: 0.9,
+          minChildSize: 0.65,
           builder: (_, scrollController) {
             return Container(
               decoration: const BoxDecoration(
                 color: Color(0xFF2C2C2C),
                 borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
               ),
-              child: Column(
-                children: [
-                   Padding(
-                    padding: const EdgeInsets.only(top: 8, right: 8),
-                    child: Stack(
-                      alignment: Alignment.center,
-                      children: [
-                        Align(
-                          alignment: Alignment.topCenter,
-                          child: Container(
-                            height: 5, width: 40,
-                            decoration: BoxDecoration(
-                              color: Colors.grey.shade600,
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                          ),
-                        ),
-                        Align(
-                          alignment: Alignment.centerRight,
-                          child: IconButton(
-                            icon: const Icon(Icons.close),
-                            onPressed: () => Navigator.of(context).pop(),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Expanded(
-                    child: BlocBuilder<DetectionBloc, DetectionState>(
-                      builder: (context, state) {
-                        if (state is DetectionLoading || state is DetectionInitial) {
-                          return const Center(child: CircularProgressIndicator());
-                        }
-                        if (state is DetectionSuccess) {
-                          return _buildSuccessUI(context, state, widget.imageFile);
-                        }
-                        return const Center(child: Text("Gagal mendeteksi..."));
-                      },
-                    ),
-                  ),
-                ],
+              child: BlocBuilder<DetectionBloc, DetectionState>(
+                builder: (context, state) {
+                  // Pengecekan baru yang lebih aman
+                  if (state is DetectionResultState) {
+                    return _buildSuccessUI(context, state.result, widget.imageFile, scrollController, state is DetectionSaveInProgress);
+                  }
+                  if (state is DetectionLoading || state is DetectionInitial) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+                  return _buildFailureUI(context);
+                },
               ),
             );
           },
@@ -116,91 +87,152 @@ class _DetectionResultModalState extends State<DetectionResultModal> {
     );
   }
 
-  Widget _buildSuccessUI(BuildContext context, DetectionSuccess state, File imageFile) {
-    final result = state.result;
+  Widget _buildSuccessUI(BuildContext context, NutritionResult result, File imageFile, ScrollController scrollController, bool isSaving) {
     final formattedDate = DateFormat('dd MMMM yyyy', 'id_ID').format(DateTime.now());
+    const Color cardColor = Color(0xFF353535);
 
-    return SingleChildScrollView(
+    return ListView(
+      controller: scrollController,
       padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(16),
-            child: Image.file(imageFile, height: 200, fit: BoxFit.cover),
+      children: [
+        Center(
+          child: Container(
+            margin: const EdgeInsets.only(top: 8, bottom: 16),
+            height: 5,
+            width: 40,
+            decoration: BoxDecoration(
+              color: Colors.grey.shade600,
+              borderRadius: BorderRadius.circular(10),
+            ),
           ),
-          const SizedBox(height: 16),
-          Row(
-            children: [
-              ClipRRect(
-                borderRadius: BorderRadius.circular(8),
-                child: Image.file(imageFile, width: 50, height: 50, fit: BoxFit.cover),
-              ),
-              const SizedBox(width: 12),
-              Column(
+        ),
+        Row(
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: Image.file(imageFile, width: 50, height: 50, fit: BoxFit.cover),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(formattedDate, style: TextStyle(color: Colors.grey.shade400)),
-                  Text(result.foodName, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+                  Text(
+                    result.foodName,
+                    style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ],
-              )
-            ],
-          ),
-          const SizedBox(height: 16),
-          Row(
-            children: [
-              Expanded(
-                child: OutlinedButton.icon(
-                  icon: const Icon(Icons.refresh),
-                  label: const Text('Ulangi'),
-                  onPressed: () {
-                    Navigator.of(context).pop();
-                  },
+              ),
+            )
+          ],
+        ),
+        const SizedBox(height: 16),
+        Row(
+          children: [
+            Expanded(
+              child: OutlinedButton.icon(
+                icon: const Icon(Iconsax.refresh),
+                label: const Text('Ulangi'),
+                onPressed: isSaving ? null : () => Navigator.of(context).pop(),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              flex: 2,
+              child: ElevatedButton.icon(
+                icon: isSaving ? Container() : const Icon(Iconsax.save_21),
+                label: isSaving
+                    ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                    : const Text('Simpan'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Theme.of(context).colorScheme.primary,
+                  foregroundColor: Colors.white,
                 ),
+                onPressed: isSaving ? null : () {
+                  setState(() { _isActionTaken = true; });
+                  context.read<DetectionBloc>().add(DetectionSaveRequested());
+                },
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                flex: 2,
-                child: ElevatedButton.icon(
-                  icon: const Icon(Icons.save),
-                  label: const Text('Simpan'),
-                  style: ElevatedButton.styleFrom(backgroundColor: Colors.pink, foregroundColor: Colors.white),
-                  onPressed: () {
-                    setState(() { _isActionTaken = true; });
-                    context.read<DetectionBloc>().add(DetectionSaveRequested());
-                  },
-                ),
-              ),
-              const SizedBox(width: 12),
-              OutlinedButton(
-                child: const Icon(Icons.info_outline),
-                onPressed: () {},
-              ),
-            ],
+            ),
+            const SizedBox(width: 12),
+            OutlinedButton(
+              onPressed: isSaving ? null : () {},
+              child: const Icon(Iconsax.info_circle),
+            ),
+          ],
+        ),
+        const SizedBox(height: 24),
+        const Text('Nutrisi', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+        const SizedBox(height: 8),
+        GridView.count(
+          crossAxisCount: 2,
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          childAspectRatio: 2.5,
+          mainAxisSpacing: 10,
+          crossAxisSpacing: 10,
+          children: [
+            _buildNutritionTile(
+              title: 'Kalori', iconAssetPath: 'assets/icons/calorie_icon.svg',
+              value: result.calories, unit: 'kcal', color: cardColor
+            ),
+            _buildNutritionTile(
+              title: 'Protein', iconAssetPath: 'assets/icons/protein_icon.svg',
+              value: result.protein, unit: 'g', color: cardColor
+            ),
+            _buildNutritionTile(
+              title: 'Karbo', iconAssetPath: 'assets/icons/carb_icon.svg',
+              value: result.carbohydrate, unit: 'kcal', color: cardColor
+            ),
+            _buildNutritionTile(
+              title: 'Lemak', iconAssetPath: 'assets/icons/fat_icon.svg',
+              value: result.fat, unit: 'g', color: cardColor
+            ),
+          ],
+        ),
+        const SizedBox(height: 24),
+        ClipRRect(
+          borderRadius: BorderRadius.circular(16),
+          child: Image.file(
+            imageFile,
+            fit: BoxFit.cover,
           ),
-          const SizedBox(height: 24),
-          const Text('Nutrisi', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 8),
-          GridView.count(
-            crossAxisCount: 2,
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            childAspectRatio: 2.5,
-            mainAxisSpacing: 10,
-            crossAxisSpacing: 10,
+        ),
+        const SizedBox(height: 16),
+      ],
+    );
+  }
+  
+  Widget _buildFailureUI(BuildContext context) {
+    return Padding(
+        padding: const EdgeInsets.all(32.0),
+        child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              _buildNutritionTile('Kalori', result.calories, 'kcal', Colors.orange),
-              _buildNutritionTile('Protein', result.protein, 'g', Colors.green),
-              _buildNutritionTile('Karbo', result.carbohydrate, 'kcal', Colors.yellow.shade700),
-              _buildNutritionTile('Lemak', result.fat, 'g', Colors.red.shade400),
+                const Icon(Iconsax.danger, color: Colors.amber, size: 50),
+                const SizedBox(height: 16),
+                const Text("Deteksi Gagal", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                const SizedBox(height: 8),
+                const Text("Tidak dapat mengenali makanan pada gambar. Coba lagi dengan gambar yang lebih jelas.", textAlign: TextAlign.center),
+                const SizedBox(height: 24),
+                ElevatedButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    child: const Text("Coba Lagi"),
+                )
             ],
-          )
-        ],
-      ),
+        ),
     );
   }
 
-  Widget _buildNutritionTile(String title, double value, String unit, Color color) {
+  Widget _buildNutritionTile({
+    required String title,
+    required String iconAssetPath,
+    required double value,
+    required String unit,
+    required Color color
+  }) {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(

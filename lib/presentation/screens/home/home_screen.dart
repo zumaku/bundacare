@@ -5,7 +5,6 @@ import 'package:go_router/go_router.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:intl/intl.dart';
 import 'package:bundacare/domain/entities/food_log.dart';
-import 'package:bundacare/domain/entities/user_profile.dart';
 import 'package:bundacare/presentation/bloc/auth/auth_bloc.dart';
 import 'package:bundacare/presentation/bloc/food/food_bloc.dart';
 

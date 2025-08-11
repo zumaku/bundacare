@@ -22,13 +22,15 @@ class _CameraScreenState extends State<CameraScreen> {
   Future<void>? _initializeControllerFuture;
   FlashMode _flashMode = FlashMode.off;
 
-  // --- 1. Variabel untuk mengelola Zoom ---
+  // 1. Tambahkan state untuk mengontrol visibilitas pratinjau
+  bool _isPreviewVisible = true;
+  // State untuk menyimpan gambar yang baru diambil
+  File? _capturedImage;
+
   double _currentZoomLevel = 1.0;
   double _maxZoomLevel = 1.0;
-  // Definisikan level zoom yang bisa dipilih
   final List<double> _zoomLevels = [1.0, 2.0, 3.0];
   int _currentZoomIndex = 0;
-
 
   @override
   void initState() {
@@ -37,6 +39,11 @@ class _CameraScreenState extends State<CameraScreen> {
   }
 
   Future<void> _initializeCamera() async {
+    // Tambahkan pengecekan jika controller sudah ada, dispose dulu
+    if (_controller != null) {
+      await _controller!.dispose();
+    }
+
     var status = await Permission.camera.request();
     if (status.isGranted) {
       final cameras = await availableCameras();
@@ -50,6 +57,7 @@ class _CameraScreenState extends State<CameraScreen> {
 
         _initializeControllerFuture = _controller!.initialize().then((_) {
           _controller!.getMaxZoomLevel().then((value) => _maxZoomLevel = value);
+          _controller!.setZoomLevel(_currentZoomLevel);
         });
         if (mounted) {
           setState(() {});
@@ -73,7 +81,9 @@ class _CameraScreenState extends State<CameraScreen> {
       final image = await _controller!.takePicture();
       
       if (!mounted) return;
-      _processImage(File(image.path));
+      // Simpan gambar dan panggil prosesnya
+      _capturedImage = File(image.path);
+      _processImage();
     } catch (e) {
       debugPrint("Error taking picture: $e");
     }
@@ -85,26 +95,42 @@ class _CameraScreenState extends State<CameraScreen> {
       final XFile? image = await picker.pickImage(source: ImageSource.gallery);
       if (image != null) {
         if (!mounted) return;
-        _processImage(File(image.path));
+        _capturedImage = File(image.path);
+        _processImage();
       }
     } catch (e) {
       debugPrint("Error picking image from gallery: $e");
     }
   }
 
-  void _processImage(File imageFile) {
+  // 2. Sederhanakan _processImage secara signifikan
+  void _processImage() {
+    if (_capturedImage == null) return;
+
+    // Sembunyikan pratinjau kamera, tampilkan gambar yang ditangkap
+    setState(() {
+      _isPreviewVisible = false;
+    });
+
     final foodBloc = context.read<FoodBloc>();
+    
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (_) {
-        return BlocProvider.value(
-          value: foodBloc,
-          child: DetectionResultModal(imageFile: imageFile),
-        );
-      },
-    );
+      builder: (_) => BlocProvider.value(
+        value: foodBloc,
+        child: DetectionResultModal(imageFile: _capturedImage!),
+      ),
+    ).whenComplete(() {
+        // 3. Saat modal ditutup, tampilkan lagi pratinjau kamera
+        if (mounted) {
+          setState(() {
+            _isPreviewVisible = true;
+            _capturedImage = null; // Hapus referensi gambar
+          });
+        }
+    });
   }
 
   void _toggleFlash() {
@@ -116,13 +142,10 @@ class _CameraScreenState extends State<CameraScreen> {
     }
   }
 
-  // --- 2. Fungsi baru untuk mengganti level Zoom ---
   void _cycleZoom() {
-    // Pindah ke level zoom berikutnya
     _currentZoomIndex = (_currentZoomIndex + 1) % _zoomLevels.length;
     _currentZoomLevel = _zoomLevels[_currentZoomIndex];
 
-    // Pastikan level zoom yang dipilih tidak melebihi batas maksimal kamera
     if (_currentZoomLevel > _maxZoomLevel) {
       _currentZoomIndex = 0;
       _currentZoomLevel = _zoomLevels[_currentZoomIndex];
@@ -133,14 +156,6 @@ class _CameraScreenState extends State<CameraScreen> {
     });
   }
 
-
-  @override
-  void dispose() {
-    _controller?.dispose();
-    super.dispose();
-  }
-
-  // WIDGET HELPER BARU UNTUK TOMBOL DENGAN EFEK BLUR
   Widget _buildCircularButton({required IconData icon, required VoidCallback onPressed}) {
     return ClipRRect(
       borderRadius: BorderRadius.circular(50), // Membuat bentuknya melingkar sempurna
@@ -163,31 +178,50 @@ class _CameraScreenState extends State<CameraScreen> {
   }
 
   @override
+  void dispose() {
+    _controller?.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.black,
       body: FutureBuilder<void>(
         future: _initializeControllerFuture,
         builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.done) {
-            if (_controller != null && _controller!.value.isInitialized) {
-              return Stack(
-                fit: StackFit.expand,
-                children: [
-                  CameraPreview(_controller!),
+          if (snapshot.connectionState == ConnectionState.done && _controller != null && _controller!.value.isInitialized) {
+            return Stack(
+              fit: StackFit.expand,
+              children: [
+                // Lapisan pratinjau kamera
+                Visibility(
+                  visible: _isPreviewVisible,
+                  child: CameraPreview(_controller!),
+                ),
+                
+                // --- PERBAIKAN DI SINI ---
+                // Gunakan 'if' langsung untuk menampilkan gambar yang ditangkap.
+                // Ini lebih aman daripada Visibility untuk kasus ini.
+                if (!_isPreviewVisible && _capturedImage != null)
+                  Image.file(_capturedImage!, fit: BoxFit.cover),
+                // --------------------------
+
+                // Bounding box hanya terlihat saat pratinjau aktif
+                if (_isPreviewVisible)
                   Center(
                     child: SvgPicture.asset(
                       'assets/images/bounding_box.svg',
-                      width: MediaQuery.of(context).size.width * 0.7,
+                      width: MediaQuery.of(context).size.width * 0.9,
                     ),
                   ),
-                  _buildControlsOverlay(),
-                ],
-              );
-            } else {
-              return const Center(child: Text("Kamera tidak tersedia.", style: TextStyle(color: Colors.white)));
-            }
+                
+                // Tampilkan kontrol hanya saat pratinjau aktif
+                if (_isPreviewVisible) _buildControlsOverlay(),
+              ],
+            );
           } else {
+            // Tampilkan loading indicator saat future null atau sedang berjalan
             return const Center(child: CircularProgressIndicator());
           }
         },
