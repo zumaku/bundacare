@@ -6,8 +6,15 @@ import 'package:bundacare/core/injection_container.dart' as di;
 import 'package:bundacare/domain/repositories/detection_repository.dart';
 import 'package:bundacare/presentation/bloc/detection/detection_bloc.dart';
 import 'package:bundacare/presentation/bloc/food/food_bloc.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:intl/intl.dart';
 import 'package:iconsax/iconsax.dart';
+
+
+const Color calorieColor = Color(0xFFE66400);
+const Color proteinColor = Color(0xFF0CE600);
+const Color carbsColor = Color(0xFFE6E600);
+const Color fatColor = Color(0xFFA13E00);
 
 class DetectionResultModal extends StatefulWidget {
   final File imageFile;
@@ -214,31 +221,43 @@ class _DetectionResultModalState extends State<DetectionResultModal> {
           ],
         ),
         const SizedBox(height: 24),
-        const Text('Nutrisi', style: TextStyle(fontSize: 16)),
+        const Text('Nutrisi', style: TextStyle(fontSize: 16, color: Colors.grey)),
         const SizedBox(height: 8),
         GridView.count(
           crossAxisCount: 2,
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
-          childAspectRatio: 2.5,
+          childAspectRatio: 2.5, // Sesuaikan rasio agar pas
           mainAxisSpacing: 10,
           crossAxisSpacing: 10,
           children: [
             _buildNutritionTile(
-              title: 'Kalori', iconAssetPath: 'assets/icons/calorie_icon.svg',
-              value: result.calories, unit: 'kcal', color: cardColor
+              title: 'Kalori',
+              iconAssetPath: 'assets/icons/calorie_icon.svg',
+              value: result.calories,
+              unit: 'kcal',
+              color: calorieColor, // <-- Gunakan warna spesifik
             ),
             _buildNutritionTile(
-              title: 'Protein', iconAssetPath: 'assets/icons/protein_icon.svg',
-              value: result.protein, unit: 'g', color: cardColor
+              title: 'Protein',
+              iconAssetPath: 'assets/icons/protein_icon.svg',
+              value: result.protein,
+              unit: 'g',
+              color: proteinColor, // <-- Gunakan warna spesifik
             ),
             _buildNutritionTile(
-              title: 'Karbo', iconAssetPath: 'assets/icons/carb_icon.svg',
-              value: result.carbohydrate, unit: 'kcal', color: cardColor
+              title: 'Karbo',
+              iconAssetPath: 'assets/icons/carb_icon.svg',
+              value: result.carbohydrate,
+              unit: 'kcal',
+              color: carbsColor, // <-- Gunakan warna spesifik
             ),
             _buildNutritionTile(
-              title: 'Lemak', iconAssetPath: 'assets/icons/fat_icon.svg',
-              value: result.fat, unit: 'g', color: cardColor
+              title: 'Lemak',
+              iconAssetPath: 'assets/icons/fat_icon.svg',
+              value: result.fat,
+              unit: 'g',
+              color: fatColor, // <-- Gunakan warna spesifik
             ),
           ],
         ),
@@ -281,24 +300,38 @@ class _DetectionResultModalState extends State<DetectionResultModal> {
     required String iconAssetPath,
     required double value,
     required String unit,
-    required Color color
+    required Color color, // Warna ini sekarang untuk ikon
   }) {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.grey.shade800,
+        color: const Color(0xFF353535), // Warna latar belakang kartu
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
         children: [
-          Icon(Icons.circle, color: color, size: 40),
+          // Latar belakang ikon yang melingkar
+          Container(
+            width: 40,
+            height: 40,
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: color.withOpacity(0.3),
+              shape: BoxShape.circle,
+            ),
+            child: SvgPicture.asset(
+              iconAssetPath,
+            ),
+          ),
           const SizedBox(width: 12),
+          // Kolom untuk teks
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
-              Text('${value.toStringAsFixed(1)} $unit', style: TextStyle(color: Colors.grey.shade400)),
+              Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+              Text('${value.toStringAsFixed(1)} $unit',
+                  style: TextStyle(color: Colors.grey.shade400, fontSize: 14)),
             ],
           )
         ],
