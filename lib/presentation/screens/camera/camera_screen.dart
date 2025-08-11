@@ -212,7 +212,7 @@ class _CameraScreenState extends State<CameraScreen> {
                   Center(
                     child: SvgPicture.asset(
                       'assets/images/bounding_box.svg',
-                      width: MediaQuery.of(context).size.width * 0.9,
+                      width: MediaQuery.of(context).size.width * 0.8,
                     ),
                   ),
                 

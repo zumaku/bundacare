@@ -59,9 +59,9 @@ class _DetectionResultModalState extends State<DetectionResultModal> {
           }
         },
         child: DraggableScrollableSheet(
-          initialChildSize: 0.65,
-          maxChildSize: 0.9,
-          minChildSize: 0.65,
+          initialChildSize: 0.6,
+          maxChildSize: 1.0,
+          minChildSize: 0.6,
           builder: (_, scrollController) {
             return Container(
               decoration: const BoxDecoration(
@@ -129,42 +129,92 @@ class _DetectionResultModalState extends State<DetectionResultModal> {
           ],
         ),
         const SizedBox(height: 16),
+        // Di dalam method _buildSuccessUI di detection_result_modal.dart
+
         Row(
           children: [
-            Expanded(
-              child: OutlinedButton.icon(
-                icon: const Icon(Iconsax.refresh),
-                label: const Text('Ulangi'),
-                onPressed: isSaving ? null : () => Navigator.of(context).pop(),
+            // Tombol Ulangi
+            OutlinedButton.icon(
+              style: OutlinedButton.styleFrom(
+                foregroundColor: Colors.grey.shade300,
+                side: BorderSide(color: Colors.grey.shade700),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
               ),
+              // Gunakan parameter 'icon' dan 'label'
+              icon: const Icon(Iconsax.refresh, size: 20),
+              label: const Text('Ulangi'),
+              onPressed: isSaving ? null : () => Navigator.of(context).pop(),
             ),
             const SizedBox(width: 12),
+
+            // Tombol Simpan
             Expanded(
-              flex: 2,
-              child: ElevatedButton.icon(
-                icon: isSaving ? Container() : const Icon(Iconsax.save_21),
-                label: isSaving
-                    ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                    : const Text('Simpan'),
+              flex: 2, // Beri jatah 2 bagian dari ruang (lebih lebar)
+              child: ElevatedButton(
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Theme.of(context).colorScheme.primary,
                   foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  disabledBackgroundColor: Theme.of(context).colorScheme.primary.withOpacity(0.5),
                 ),
-                onPressed: isSaving ? null : () {
-                  setState(() { _isActionTaken = true; });
-                  context.read<DetectionBloc>().add(DetectionSaveRequested());
-                },
+                onPressed: isSaving
+                    ? null
+                    : () {
+                        setState(() { _isActionTaken = true; });
+                        context.read<DetectionBloc>().add(DetectionSaveRequested());
+                      },
+                child: isSaving
+                    ? const Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                          ),
+                          SizedBox(width: 8),
+                          Text('Menyimpan...'),
+                        ],
+                      )
+                    : const Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Iconsax.save_21, size: 20),
+                          SizedBox(width: 8),
+                          Text('Simpan'),
+                        ],
+                      ),
               ),
             ),
             const SizedBox(width: 12),
-            OutlinedButton(
-              onPressed: isSaving ? null : () {},
-              child: const Icon(Iconsax.info_circle),
+
+            // Tombol Info
+            Expanded(
+              flex: 1, // Beri jatah 1 bagian dari ruang
+              child: OutlinedButton(
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: Colors.grey.shade300,
+                  side: BorderSide(color: Colors.grey.shade700),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                ),
+                onPressed: isSaving ? null : () {},
+                child: const Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Iconsax.info_circle, size: 20),
+                    SizedBox(width: 8),
+                    Text('Info'),
+                  ],
+                ),
+              ),
             ),
           ],
         ),
         const SizedBox(height: 24),
-        const Text('Nutrisi', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+        const Text('Nutrisi', style: TextStyle(fontSize: 16)),
         const SizedBox(height: 8),
         GridView.count(
           crossAxisCount: 2,
@@ -200,7 +250,7 @@ class _DetectionResultModalState extends State<DetectionResultModal> {
             fit: BoxFit.cover,
           ),
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 80),
       ],
     );
   }
@@ -241,7 +291,7 @@ class _DetectionResultModalState extends State<DetectionResultModal> {
       ),
       child: Row(
         children: [
-          Icon(Icons.circle, color: color, size: 24),
+          Icon(Icons.circle, color: color, size: 40),
           const SizedBox(width: 12),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
