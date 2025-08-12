@@ -1,3 +1,5 @@
+import 'package:bundacare/domain/entities/food_log.dart';
+import 'package:bundacare/presentation/screens/detail/food_detail_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart'; // <-- Pastikan import ini ada
 import 'package:go_router/go_router.dart';
@@ -25,6 +27,15 @@ class AppRouter {
       GoRoute(
         path: '/notifications',
         builder: (context, state) => const NotificationScreen(),
+      ),
+      GoRoute(
+        path: '/detail',
+        name: 'detail',
+        builder: (context, state) {
+          // Ambil objek FoodLog dari parameter `extra`
+          final foodLog = state.extra as FoodLog;
+          return FoodDetailScreen(foodLog: foodLog);
+        },
       ),
 
       StatefulShellRoute.indexedStack(
