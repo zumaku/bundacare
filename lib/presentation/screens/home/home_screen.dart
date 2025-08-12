@@ -397,6 +397,7 @@ Widget _buildFoodItemCard(FoodLog foodLog) {
     child: Stack(
       alignment: Alignment.bottomCenter,
       children: [
+        // Gambar Latar Belakang (Tidak Berubah)
         Positioned.fill(
           child: Image.network(
             foodLog.imageUrl,
@@ -410,6 +411,7 @@ Widget _buildFoodItemCard(FoodLog foodLog) {
             },
           ),
         ),
+        // Gradien Hitam (Tidak Berubah)
         Container(
           height: 80,
           decoration: BoxDecoration(
@@ -420,18 +422,26 @@ Widget _buildFoodItemCard(FoodLog foodLog) {
             ),
           ),
         ),
+        // Info Kalori di Kiri Atas
         Positioned(
           top: 8,
           left: 8,
           child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             decoration: BoxDecoration(
               color: Colors.black.withOpacity(0.5),
               borderRadius: BorderRadius.circular(20),
             ),
             child: Row(
               children: [
-                const Icon(Icons.local_fire_department, color: Colors.orange, size: 14),
+                // --- PERBAIKAN 1: GANTI ICON DENGAN SVG ---
+                SvgPicture.asset(
+                  'assets/icons/calorie_icon.svg', // Menggunakan ikon kalori
+                  height: 14,
+                  width: 14,
+                  // Beri warna oranye pada ikon SVG
+                  colorFilter: const ColorFilter.mode(Colors.orange, BlendMode.srcIn),
+                ),
                 const SizedBox(width: 4),
                 Text(
                   '${foodLog.calories.toStringAsFixed(1)} kcal',
@@ -441,18 +451,31 @@ Widget _buildFoodItemCard(FoodLog foodLog) {
             ),
           ),
         ),
+        // Nama Makanan di Bawah
         Padding(
-          padding: const EdgeInsets.all(12.0),
-          child: Text(
-            foodLog.foodName,
-            style: const TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.bold,
-              fontSize: 16,
-            ),
-            textAlign: TextAlign.center,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
+          padding: const EdgeInsets.all(8.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              // --- PERBAIKAN 2: TAMBAHKAN BACKGROUND PADA TEKS ---
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: Colors.black.withOpacity(0.5),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  foodLog.foodName,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 12,
+                  ),
+                  textAlign: TextAlign.center,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
           ),
         ),
       ],
