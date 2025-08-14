@@ -63,7 +63,7 @@ class ProfileScreen extends StatelessWidget {
                     ),
                     IconButton(
                       icon: const Icon(Iconsax.notification, size: 28),
-                      onPressed: () => context.go('/notifications'),
+                      onPressed: () => context.push('/notifications'),
                     ),
                   ],
                 ),
