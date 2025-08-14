@@ -12,12 +12,12 @@ abstract class AuthRemoteDataSource {
 
 class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   @override
-  Future<void> signInWithGoogle() async {
+  Future<void> signInWithGoogle() async { 
     try {
       await supabase.auth.signInWithOAuth(
         OAuthProvider.google,
         // URL untuk redirect setelah login berhasil. HARUS dikonfigurasi di Supabase Dashboard.
-        redirectTo: 'io.supabase.bundacare://login-callback/', 
+        redirectTo: 'io.supabase.bundacare://login-callback/',
       );
     } catch (e) {
       // Handle error, mungkin dengan custom exception
