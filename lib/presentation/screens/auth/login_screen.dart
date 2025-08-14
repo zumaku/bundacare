@@ -9,108 +9,109 @@ class LoginScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Stack(
-        fit: StackFit.expand, // Membuat Stack memenuhi seluruh layar
-        children: [
-          // 1. Gambar Latar Belakang
-          Image.asset(
-            'assets/images/login_screen_image.png',
-            fit: BoxFit.cover, // Memastikan gambar memenuhi layar tanpa distorsi
-          ),
-          
-          // 2. Lapisan Gelap (untuk membuat teks lebih mudah dibaca)
-          Container(
-            color: Colors.black.withOpacity(0.3),
-          ),
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(10.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const Spacer(flex: 1),
 
-          // 3. Konten Utama
-          SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 40.0),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween, // Mendorong logo ke atas & card ke bawah
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  // Logo BundaCare di bagian atas
-                  SvgPicture.asset(
-                    'assets/logo/login_screen_logo.svg',
-                    height: 50,
+              // 1. Card Gambar di Atas
+              ClipRRect(
+                borderRadius: BorderRadius.circular(20.0),
+                // Hapus widget AspectRatio dari sini
+                child: Container(
+                  // Beri ketinggian yang lebih proporsional, misal 50% dari tinggi layar
+                  height: MediaQuery.of(context).size.height * 0.65,
+                  child: Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      // Gambar Latar
+                      Image.asset(
+                        'assets/images/login_screen_image.png',
+                        fit: BoxFit.cover,
+                      ),
+                      // Lapisan gelap agar logo terlihat
+                      Container(
+                        color: Colors.black.withOpacity(0.15),
+                      ),
+                      // Logo di tengah atas gambar
+                      Positioned(
+                        top: 20,
+                        left: 0,
+                        right: 0,
+                        child: SvgPicture.asset(
+                          'assets/logo/login_screen_logo.svg',
+                          height: 50,
+                        ),
+                      ),
+                    ],
                   ),
-
-                  // Card Konten
-                  Container(
-                    padding: const EdgeInsets.all(24.0),
-                    decoration: BoxDecoration(
-                      color: Theme.of(context).scaffoldBackgroundColor, // Warna latar belakang dari tema
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min, // Membuat Column seukuran kontennya
-                      children: [
-                        // Kata Sambutan
-                        Text(
-                          'Selamat Datang di BundaCare',
-                          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                                fontWeight: FontWeight.bold,
-                              ),
-                          textAlign: TextAlign.center,
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          'Teman setia perjalanan kehamilan Anda.',
-                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                color: Colors.grey.shade400,
-                              ),
-                          textAlign: TextAlign.center,
-                        ),
-                        const SizedBox(height: 32),
-
-                        // Tombol Login dengan Google
-                        BlocConsumer<AuthBloc, AuthState>(
-                          listener: (context, state) {
-                            if (state is Unauthenticated && state.message != null) {
-                              ScaffoldMessenger.of(context)
-                                ..hideCurrentSnackBar()
-                                ..showSnackBar(
-                                  SnackBar(content: Text(state.message!)),
-                                );
-                            }
-                          },
-                          builder: (context, state) {
-                            if (state is AuthLoading) {
-                              return const Center(child: CircularProgressIndicator());
-                            }
-                            return SizedBox(
-                              width: double.infinity,
-                              child: ElevatedButton.icon(
-                                style: ElevatedButton.styleFrom(
-                                  padding: const EdgeInsets.symmetric(vertical: 14),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  backgroundColor: const Color(0xFF424242), // Warna tombol lebih gelap
-                                  foregroundColor: Colors.white,
-                                ),
-                                icon: SvgPicture.asset(
-                                  'assets/icons/google_icon.svg', // Pastikan path ini benar
-                                  height: 22,
-                                ),
-                                label: const Text('Masuk dengan Google', style: TextStyle(fontSize: 16)),
-                                onPressed: () {
-                                  context.read<AuthBloc>().add(AuthSignInWithGoogleRequested());
-                                },
-                              ),
-                            );
-                          },
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
+                ),
               ),
-            ),
+              const SizedBox(height: 20),
+
+              // 2. Kata Sambutan (tidak di dalam card)
+              Text(
+                'Selamat Datang di BundaCare',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 16,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Teman setia perjalanan kehamilan Anda.',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 24,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+              ),
+              const Spacer(flex: 2),
+
+              // 3. Tombol Login
+              BlocConsumer<AuthBloc, AuthState>(
+                listener: (context, state) {
+                  if (state is Unauthenticated && state.message != null) {
+                    ScaffoldMessenger.of(context)
+                      ..hideCurrentSnackBar()
+                      ..showSnackBar(
+                        SnackBar(content: Text(state.message!)),
+                      );
+                  }
+                },
+                builder: (context, state) {
+                  if (state is AuthLoading) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+                  return Padding(padding: EdgeInsets.all(2), child: ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      backgroundColor: const Color(0xFF424242),
+                      foregroundColor: Colors.white,
+                    ),
+                    icon: SvgPicture.asset(
+                      'assets/icons/google_icon.svg',
+                      height: 22,
+                    ),
+                    label: const Text('Masuk dengan Google', style: TextStyle(fontSize: 16)),
+                    onPressed: () {
+                      context.read<AuthBloc>().add(AuthSignInWithGoogleRequested());
+                    },
+                  ));
+                },
+              ),
+              const Spacer(flex: 1),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
