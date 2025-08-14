@@ -44,6 +44,7 @@ dev_dependencies:
     sdk: flutter
 
   flutter_launcher_icons: ^0.14.4
+  flutter_native_splash: ^2.4.6
   flutter_lints: ^5.0.0
   mocktail: ^1.0.4
   bloc_test: ^10.0.0
@@ -56,6 +57,7 @@ flutter:
   # To add assets to your application, add an assets section, like this:
   assets:
     - .env
+    - assets/app/
     - assets/images/
     - assets/logo/
     - assets/icons/
@@ -86,7 +88,7 @@ flutter:
 
 flutter_launcher_icons:
   # Path ke file ikon utama Anda
-  image_path: "assets/icons/app_icon.png" 
+  image_path: "assets/app/app_icon.png" 
   
   # Aktifkan untuk platform Android dan iOS
   android: true
@@ -95,4 +97,19 @@ flutter_launcher_icons:
   # (Opsional tapi direkomendasikan) Pengaturan untuk ikon adaptif di Android
   # Ini mencegah ikon Anda muncul di dalam lingkaran/kotak putih
   adaptive_icon_background: "#121212" # Warna background (misal: hitam/gelap)
-  adaptive_icon_foreground: "assets/icons/app_icon.png"
+  adaptive_icon_foreground: "assets/app/app_icon.png"
+
+flutter_native_splash:
+  # Konfigurasi untuk iOS dan Android di bawah versi 12
+  color: "#202020"
+  # background_image: "assets/app/splash_screen_background.jpg"
+  image: "assets/app/splach_screen_logo.png"
+  # TAMBAHKAN INI: Tampilkan branding di bagian bawah
+  branding: "assets/app/branding_logo.png"
+
+  # Konfigurasi KHUSUS untuk Android 12 dan lebih baru
+  android_12:
+    color: "#202020"
+    image: "assets/app/splach_screen_logo.png"
+    # TAMBAHKAN INI JUGA: Tampilkan branding untuk Android 12+
+    branding: "assets/app/branding_logo.png"
