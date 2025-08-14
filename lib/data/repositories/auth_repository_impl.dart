@@ -25,4 +25,9 @@ class AuthRepositoryImpl implements AuthRepository {
   Future<UserProfile> getUserProfile() async {
     return await remoteDataSource.getUserProfile();
   }
+
+  @override
+  Future<void> updatePregnancyStartDate(DateTime date) async { // <-- Tambahkan implementasi ini
+    await remoteDataSource.updatePregnancyStartDate(date);
+  }
 }

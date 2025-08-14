@@ -6,4 +6,5 @@ abstract class AuthRepository {
   Future<void> signOut();
   User? get currentUser;
   Future<UserProfile> getUserProfile();
+  Future<void> updatePregnancyStartDate(DateTime date);
 }

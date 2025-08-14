@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:bloc/bloc.dart';
 import 'package:bundacare/domain/entities/user_profile.dart';
 import 'package:bundacare/domain/usecases/auth/get_user_profile.dart';
+import 'package:bundacare/domain/usecases/auth/update_pregnancy_start_date.dart';
 import 'package:equatable/equatable.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' as supabase; // <-- Ganti import dengan alias
 import 'package:bundacare/domain/usecases/auth/sign_in_with_google.dart';
@@ -16,15 +17,18 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final GetUserProfile _getUserProfile;
   // Gunakan tipe dari package supabase
   late final StreamSubscription<supabase.AuthState> _authStateSubscription; 
+  final UpdatePregnancyStartDate _updatePregnancyStartDate;
 
   AuthBloc({
     required SignInWithGoogle signInWithGoogle,
     required SignOut signOut,
     required GetUserProfile getUserProfile,
     required supabase.SupabaseClient supabaseClient, // Gunakan alias
+    required UpdatePregnancyStartDate updatePregnancyStartDate, // <-- Tambahkan
   })  : _signInWithGoogle = signInWithGoogle,
         _signOut = signOut,
         _getUserProfile = getUserProfile,
+        _updatePregnancyStartDate = updatePregnancyStartDate,
         super(AuthInitial()) {
 
     _authStateSubscription = supabaseClient.auth.onAuthStateChange.listen((data) {
@@ -58,6 +62,23 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         }
       } else {
         emit(const Unauthenticated());
+      }
+    });
+
+    on<AuthPregnancyStartDateUpdated>((event, emit) async {
+      try {
+        await _updatePregnancyStartDate(event.date);
+        // Setelah berhasil update, ambil lagi profil terbaru
+        final updatedProfile = await _getUserProfile();
+        // Dapatkan state saat ini untuk mengambil data user
+        final currentState = state;
+        if (currentState is Authenticated) {
+          // Pancarkan state Authenticated baru dengan profil yang sudah diperbarui
+          emit(Authenticated(currentState.user, profile: updatedProfile));
+        }
+      } catch (e) {
+        // Handle error jika perlu
+        print("Gagal update tanggal: $e");
       }
     });
   }

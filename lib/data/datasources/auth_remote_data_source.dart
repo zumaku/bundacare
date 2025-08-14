@@ -6,7 +6,8 @@ abstract class AuthRemoteDataSource {
   Future<void> signInWithGoogle();
   Future<void> signOut();
   User? get currentUser;
-  Future<UserProfileModel> getUserProfile(); 
+  Future<UserProfileModel> getUserProfile();
+  Future<void> updatePregnancyStartDate(DateTime date);
 }
 
 class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
@@ -47,6 +48,20 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       return UserProfileModel.fromJson(data);
     } catch (e) {
       throw Exception('Failed to get user profile: $e');
+    }
+  }
+
+  @override
+  Future<void> updatePregnancyStartDate(DateTime date) async {
+    final userId = supabase.auth.currentUser?.id;
+    if (userId == null) throw Exception('Pengguna belum login');
+    try {
+      await supabase
+          .from('profiles')
+          .update({'pregnancy_start_date': date.toIso8601String()})
+          .eq('id', userId);
+    } catch (e) {
+      throw Exception('Gagal memperbarui tanggal awal kehamilan: $e');
     }
   }
 }

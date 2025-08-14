@@ -5,6 +5,7 @@ import 'package:bundacare/data/repositories/food_repository_impl.dart';
 import 'package:bundacare/domain/repositories/detection_repository.dart';
 import 'package:bundacare/domain/repositories/food_repository.dart';
 import 'package:bundacare/domain/usecases/auth/get_user_profile.dart';
+import 'package:bundacare/domain/usecases/auth/update_pregnancy_start_date.dart';
 import 'package:bundacare/domain/usecases/food/detect_from_image.dart';
 import 'package:bundacare/domain/usecases/food/get_todays_food_logs.dart';
 import 'package:bundacare/presentation/bloc/detection/detection_bloc.dart';
@@ -34,6 +35,7 @@ Future<void> init() async {
         signOut: sl(),
         getUserProfile: sl(),
         supabaseClient: sl(),
+        updatePregnancyStartDate: sl(),
       ));
   sl.registerFactory(() => FoodBloc(
         getTodaysFoodLogs: sl(),
@@ -53,6 +55,7 @@ Future<void> init() async {
   sl.registerLazySingleton(() => DeleteFoodLog(sl()));
   sl.registerLazySingleton(() => SaveFoodLog(sl()));
   sl.registerLazySingleton(() => DetectFromImage(sl()));
+  sl.registerLazySingleton(() => UpdatePregnancyStartDate(sl()));
 
   // Repositories
   sl.registerLazySingleton<AuthRepository>(() => AuthRepositoryImpl(remoteDataSource: sl()));
