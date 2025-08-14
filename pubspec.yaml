@@ -43,9 +43,11 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
 
+  flutter_launcher_icons: ^0.14.4
   flutter_lints: ^5.0.0
   mocktail: ^1.0.4
   bloc_test: ^10.0.0
+
 
 flutter:
 
@@ -81,3 +83,16 @@ flutter:
           weight: 900
         - asset: assets/fonts/Poppins-Italic.ttf
           style: italic
+
+flutter_launcher_icons:
+  # Path ke file ikon utama Anda
+  image_path: "assets/icons/app_icon.png" 
+  
+  # Aktifkan untuk platform Android dan iOS
+  android: true
+  ios: true
+  
+  # (Opsional tapi direkomendasikan) Pengaturan untuk ikon adaptif di Android
+  # Ini mencegah ikon Anda muncul di dalam lingkaran/kotak putih
+  adaptive_icon_background: "#121212" # Warna background (misal: hitam/gelap)
+  adaptive_icon_foreground: "assets/icons/app_icon.png"
