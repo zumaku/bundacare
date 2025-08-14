@@ -23,6 +23,7 @@ class BundaCareApp extends StatelessWidget {
       child: Builder(
         builder: (context) {
           return MaterialApp.router(
+            debugShowCheckedModeBanner: false,
             title: 'BundaCare',
             // Panggil router dari AppRouter, berikan context yang benar
             routerConfig: AppRouter.createRouter(context), 
