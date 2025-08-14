@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:bundacare/presentation/bloc/auth/auth_bloc.dart';
 
 class LoginScreen extends StatelessWidget {
@@ -8,41 +9,103 @@ class LoginScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: BlocListener<AuthBloc, AuthState>(
-        listener: (context, state) {
-          if (state is Unauthenticated && state.message != null) {
-            ScaffoldMessenger.of(context)
-              ..hideCurrentSnackBar()
-              ..showSnackBar(
-                SnackBar(content: Text(state.message!)),
-              );
-          }
-        },
-        child: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Text('Selamat Datang di BundaCare', style: TextStyle(fontSize: 24)),
-              const SizedBox(height: 30),
-              // Gunakan BlocBuilder untuk menampilkan loading indicator
-              BlocBuilder<AuthBloc, AuthState>(
-                builder: (context, state) {
-                  if (state is AuthLoading) {
-                    return const CircularProgressIndicator();
-                  }
-                  return ElevatedButton.icon(
-                    icon: const Icon(Icons.login), // Anda bisa ganti dengan logo Google
-                    label: const Text('Masuk dengan Google'),
-                    onPressed: () {
-                      // Panggil event ke AuthBloc
-                      context.read<AuthBloc>().add(AuthSignInWithGoogleRequested());
-                    },
-                  );
-                },
-              ),
-            ],
+      // 1. Gunakan Stack untuk menumpuk gambar dan konten
+      body: Stack(
+        fit: StackFit.expand,
+        children: [
+          // Gambar Latar Belakang
+          Image.asset(
+            'assets/images/login_screen_image.png',
+            fit: BoxFit.cover,
           ),
-        ),
+
+          // Konten di atas gambar
+          SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 40.0),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  // Logo BundaCare di bagian atas
+                  SvgPicture.asset(
+                    'assets/logo/login_screen_logo.svg',
+                    height: 50,
+                  ),
+
+                  // Card Konten di bagian bawah
+                  Container(
+                    padding: const EdgeInsets.all(24.0),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).scaffoldBackgroundColor.withOpacity(0.9),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        // Kata Sambutan
+                        Text(
+                          'Selamat Datang di BundaCare',
+                          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                                fontWeight: FontWeight.bold,
+                              ),
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Teman setia perjalanan kehamilan Anda.',
+                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                color: Colors.grey.shade400,
+                              ),
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 32),
+
+                        // Tombol Login dengan Google
+                        BlocConsumer<AuthBloc, AuthState>(
+                          listener: (context, state) {
+                            if (state is Unauthenticated && state.message != null) {
+                              ScaffoldMessenger.of(context)
+                                ..hideCurrentSnackBar()
+                                ..showSnackBar(
+                                  SnackBar(content: Text(state.message!)),
+                                );
+                            }
+                          },
+                          builder: (context, state) {
+                            if (state is AuthLoading) {
+                              return const Center(child: CircularProgressIndicator());
+                            }
+                            return SizedBox(
+                              width: double.infinity,
+                              child: ElevatedButton.icon(
+                                style: ElevatedButton.styleFrom(
+                                  padding: const EdgeInsets.symmetric(vertical: 14),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  backgroundColor: Colors.white,
+                                  foregroundColor: Colors.black87,
+                                ),
+                                icon: SvgPicture.asset(
+                                  'assets/icons/google_icon.svg', // Pastikan path ini benar
+                                  height: 22,
+                                ),
+                                label: const Text('Masuk dengan Google', style: TextStyle(fontSize: 16)),
+                                onPressed: () {
+                                  context.read<AuthBloc>().add(AuthSignInWithGoogleRequested());
+                                },
+                              ),
+                            );
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
