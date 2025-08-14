@@ -5,30 +5,35 @@ import 'package:bundacare/domain/entities/food_log.dart';
 abstract class FoodRemoteDataSource {
   Future<List<FoodLogModel>> getFoodLogsForToday();
   Future<void> saveFoodLog(FoodLog foodLog);
+  Future<void> deleteFoodLog(int id);
 }
 
 class FoodRemoteDataSourceImpl implements FoodRemoteDataSource {
   @override
   Future<List<FoodLogModel>> getFoodLogsForToday() async {
     try {
-      final today = DateTime.now();
-      final startOfToday = DateTime(today.year, today.month, today.day).toIso8601String();
-      final endOfToday = DateTime(today.year, today.month, today.day, 23, 59, 59).toIso8601String();
-      
       final userId = supabase.auth.currentUser?.id;
-      if (userId == null) throw Exception('User not logged in');
+      if (userId == null) throw Exception('Pengguna belum login');
+
+      final now = DateTime.now();
+      // Tentukan awal hari (pukul 00:00:00)
+      final startOfDay = DateTime(now.year, now.month, now.day).toIso8601String();
+      // Tentukan akhir hari (pukul 23:59:59)
+      final endOfDay = DateTime(now.year, now.month, now.day, 23, 59, 59).toIso8601String();
 
       final data = await supabase
           .from('food_logs')
           .select()
           .eq('user_id', userId)
-          .gte('created_at', startOfToday)
-          .lte('created_at', endOfToday);
+          .gte('created_at', startOfDay) // Lebih besar atau sama dengan awal hari
+          .lte('created_at', endOfDay); // Lebih kecil atau sama dengan akhir hari
 
       final foodLogs = data.map((item) => FoodLogModel.fromJson(item)).toList();
+      print("✅ Berhasil mengambil ${foodLogs.length} log makanan untuk hari ini.");
       return foodLogs;
     } catch (e) {
-      throw Exception('Failed to fetch food logs: $e');
+      print("❌ Error di FoodRemoteDataSource: $e");
+      throw Exception('Gagal mengambil data log makanan: $e');
     }
   }
 
@@ -47,6 +52,18 @@ class FoodRemoteDataSourceImpl implements FoodRemoteDataSource {
       });
     } catch (e) {
       throw Exception('Failed to save food log: $e');
+    }
+  }
+
+  @override
+  Future<void> deleteFoodLog(int logId) async {
+    try {
+      await supabase
+          .from('food_logs')
+          .delete()
+          .eq('id', logId);
+    } catch (e) {
+      throw Exception('Gagal menghapus log makanan: $e');
     }
   }
 }

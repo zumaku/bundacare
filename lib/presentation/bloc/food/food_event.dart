@@ -8,3 +8,10 @@ abstract class FoodEvent extends Equatable {
 }
 
 class FetchTodaysFood extends FoodEvent {}
+
+class DeleteFoodLogRequested extends FoodEvent {
+  final int id;
+  const DeleteFoodLogRequested(this.id);
+  @override
+  List<Object> get props => [id];
+}

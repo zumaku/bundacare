@@ -19,6 +19,7 @@ import 'package:bundacare/domain/usecases/auth/sign_in_with_google.dart';
 import 'package:bundacare/domain/usecases/auth/sign_out.dart';
 import 'package:bundacare/presentation/bloc/auth/auth_bloc.dart';
 import 'package:bundacare/domain/usecases/food/save_food_log.dart';
+import 'package:bundacare/domain/usecases/food/delete_food_log.dart';
 
 final sl = GetIt.instance;
 
@@ -34,7 +35,10 @@ Future<void> init() async {
         getUserProfile: sl(),
         supabaseClient: sl(),
       ));
-  sl.registerFactory(() => FoodBloc(getTodaysFoodLogs: sl()));
+  sl.registerFactory(() => FoodBloc(
+        getTodaysFoodLogs: sl(),
+        deleteFoodLog: sl(),
+      ));
   sl.registerFactory(() => DetectionBloc(
         detectFromImage: sl(),
         saveFoodLog: sl(),
@@ -46,6 +50,7 @@ Future<void> init() async {
   sl.registerLazySingleton(() => SignOut(sl()));
   sl.registerLazySingleton(() => GetUserProfile(sl()));
   sl.registerLazySingleton(() => GetTodaysFoodLogs(sl()));
+  sl.registerLazySingleton(() => DeleteFoodLog(sl()));
   sl.registerLazySingleton(() => SaveFoodLog(sl()));
   sl.registerLazySingleton(() => DetectFromImage(sl()));
 

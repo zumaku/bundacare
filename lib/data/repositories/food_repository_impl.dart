@@ -18,4 +18,8 @@ class FoodRepositoryImpl implements FoodRepository {
     await remoteDataSource.saveFoodLog(foodLog);
   }
   // --------------------------------
+
+  Future<void> deleteFoodLog(int logId) async { // <-- Tambahkan implementasi ini
+    await remoteDataSource.deleteFoodLog(logId);
+  }
 }

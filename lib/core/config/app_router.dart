@@ -13,70 +13,73 @@ import 'package:bundacare/presentation/screens/main_shell.dart';
 import 'package:bundacare/core/services/supabase_service.dart';
 import 'package:bundacare/presentation/screens/notification/notification_screen.dart'; // <-- Import
 
-final _rootNavigatorKey = GlobalKey<NavigatorState>();
-
 class AppRouter {
-  static final router = GoRouter(
-    initialLocation: '/',
-    navigatorKey: _rootNavigatorKey,
-    routes: [
-      GoRoute(
-        path: '/login',
-        builder: (context, state) => const LoginScreen(),
-      ),
-      GoRoute(
-        path: '/notifications',
-        builder: (context, state) => const NotificationScreen(),
-      ),
-      GoRoute(
-        path: '/detail',
-        name: 'detail',
-        builder: (context, state) {
-          // Ambil objek FoodLog dari parameter `extra`
-          final foodLog = state.extra as FoodLog;
-          return FoodDetailScreen(foodLog: foodLog);
-        },
-      ),
+  // Ubah router menjadi sebuah metode statis
+  static GoRouter createRouter(BuildContext context) {
+    return GoRouter(
+      initialLocation: '/',
+      routes: [
+        GoRoute(
+          path: '/login',
+          builder: (context, state) => const LoginScreen(),
+        ),
+        GoRoute(
+          path: '/notifications',
+          builder: (context, state) => const NotificationScreen(),
+        ),
+        GoRoute(
+          path: '/detail',
+          name: 'detail',
+          builder: (context, state) {
+            final foodLog = state.extra as FoodLog;
+            // Pinjamkan FoodBloc yang ada ke halaman detail
+            return BlocProvider.value(
+              value: BlocProvider.of<FoodBloc>(context),
+              child: FoodDetailScreen(foodLog: foodLog),
+            );
+          },
+        ),
 
-      StatefulShellRoute.indexedStack(
-        builder: (context, state, navigationShell) {
-          // ================== PERUBAHAN DI SINI ==================
-          // Kita bungkus MainShell dengan BlocProvider untuk FoodBloc
-          return BlocProvider(
-            create: (context) => di.sl<FoodBloc>()..add(FetchTodaysFood()),
-            child: MainShell(navigationShell: navigationShell),
-          );
-          // ========================================================
-        },
-        branches: [
-          StatefulShellBranch(
-            routes: [
-              GoRoute(path: '/', builder: (context, state) => const HomeScreen()),
-            ],
-          ),
-          StatefulShellBranch(
-            routes: [
-              GoRoute(path: '/camera', builder: (context, state) => const CameraScreen()),
-            ],
-          ),
-          StatefulShellBranch(
-            routes: [
-              GoRoute(path: '/profile', builder: (context, state) => const ProfileScreen()),
-            ],
-          ),
-        ],
-      ),
-    ],
-    redirect: (BuildContext context, GoRouterState state) {
-      final loggedIn = supabase.auth.currentUser != null;
-      final loggingIn = state.matchedLocation == '/login';
+        StatefulShellRoute.indexedStack(
+          builder: (context, state, navigationShell) {
+            // ================== PERUBAHAN DI SINI ==================
+            // Kita bungkus MainShell dengan BlocProvider untuk FoodBloc
+            return BlocProvider(
+              create: (context) => di.sl<FoodBloc>()..add(FetchTodaysFood()),
+              child: MainShell(navigationShell: navigationShell),
+            );
+            // ========================================================
+          },
+          branches: [
+            StatefulShellBranch(
+              routes: [
+                GoRoute(path: '/', builder: (context, state) => const HomeScreen()),
+              ],
+            ),
+            StatefulShellBranch(
+              routes: [
+                GoRoute(path: '/camera', builder: (context, state) => const CameraScreen()),
+              ],
+            ),
+            StatefulShellBranch(
+              routes: [
+                GoRoute(path: '/profile', builder: (context, state) => const ProfileScreen()),
+              ],
+            ),
+          ],
+        ),
+      ],
+      redirect: (BuildContext context, GoRouterState state) {
+        final loggedIn = supabase.auth.currentUser != null;
+        final loggingIn = state.matchedLocation == '/login';
 
-      if (!loggedIn) return loggingIn ? null : '/login';
-      if (loggingIn) return '/';
-      return null;
-    },
-    refreshListenable: GoRouterRefreshStream(supabase.auth.onAuthStateChange),
-  );
+        if (!loggedIn) return loggingIn ? null : '/login';
+        if (loggingIn) return '/';
+        return null;
+      },
+      refreshListenable: GoRouterRefreshStream(supabase.auth.onAuthStateChange),
+    );
+  }
 }
 
 class GoRouterRefreshStream extends ChangeNotifier {

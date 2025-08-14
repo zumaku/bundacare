@@ -34,3 +34,5 @@ class FoodError extends FoodState {
   @override
   List<Object> get props => [message];
 }
+
+class FoodDeleteSuccess extends FoodState {}
