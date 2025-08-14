@@ -9,22 +9,27 @@ class LoginScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // 1. Gunakan Stack untuk menumpuk gambar dan konten
       body: Stack(
-        fit: StackFit.expand,
+        fit: StackFit.expand, // Membuat Stack memenuhi seluruh layar
         children: [
-          // Gambar Latar Belakang
+          // 1. Gambar Latar Belakang
           Image.asset(
             'assets/images/login_screen_image.png',
-            fit: BoxFit.cover,
+            fit: BoxFit.cover, // Memastikan gambar memenuhi layar tanpa distorsi
+          ),
+          
+          // 2. Lapisan Gelap (untuk membuat teks lebih mudah dibaca)
+          Container(
+            color: Colors.black.withOpacity(0.3),
           ),
 
-          // Konten di atas gambar
+          // 3. Konten Utama
           SafeArea(
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 40.0),
               child: Column(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween, // Mendorong logo ke atas & card ke bawah
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   // Logo BundaCare di bagian atas
                   SvgPicture.asset(
@@ -32,15 +37,15 @@ class LoginScreen extends StatelessWidget {
                     height: 50,
                   ),
 
-                  // Card Konten di bagian bawah
+                  // Card Konten
                   Container(
                     padding: const EdgeInsets.all(24.0),
                     decoration: BoxDecoration(
-                      color: Theme.of(context).scaffoldBackgroundColor.withOpacity(0.9),
+                      color: Theme.of(context).scaffoldBackgroundColor, // Warna latar belakang dari tema
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Column(
-                      mainAxisSize: MainAxisSize.min,
+                      mainAxisSize: MainAxisSize.min, // Membuat Column seukuran kontennya
                       children: [
                         // Kata Sambutan
                         Text(
@@ -83,8 +88,8 @@ class LoginScreen extends StatelessWidget {
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(12),
                                   ),
-                                  backgroundColor: Colors.white,
-                                  foregroundColor: Colors.black87,
+                                  backgroundColor: const Color(0xFF424242), // Warna tombol lebih gelap
+                                  foregroundColor: Colors.white,
                                 ),
                                 icon: SvgPicture.asset(
                                   'assets/icons/google_icon.svg', // Pastikan path ini benar
