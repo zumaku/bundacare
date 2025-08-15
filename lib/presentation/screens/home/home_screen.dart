@@ -214,9 +214,9 @@ class _TrimesterCard extends StatelessWidget {
 }
 
 Widget _buildNutritionSection(BuildContext context, FoodLoaded state) {
-  final double targetKalori = 290;
-  final double targetProtein = 181;
-  final double targetKarbo = 362;
+  final double targetKalori = 2400;
+  final double targetProtein = 100;
+  final double targetKarbo = 420;
   final double targetLemak = 80;
 
   return Column(
@@ -486,4 +486,15 @@ Widget _buildFoodItemCard(BuildContext context, FoodLog foodLog) {
       ),
     )
   );
+}
+
+// Helper function untuk format angka
+String formatNumber(double number) {
+  if (number == number.truncate()) {
+    // Jika angka tidak punya desimal, tampilkan sebagai integer
+    return number.truncate().toString();
+  } else {
+    // Jika punya desimal, tampilkan satu angka di belakang koma
+    return number.toStringAsFixed(1);
+  }
 }
