@@ -16,8 +16,8 @@ const Color fatColor = Color(0xFFA13E00);
 const Color cardColor = Color(0xFF353535);
 
 class FoodDetailScreen extends StatelessWidget {
-  final FoodLog foodLog;// Metode baru untuk menampilkan dialog konfirmasi
-  
+  final FoodLog foodLog; // Metode baru untuk menampilkan dialog konfirmasi
+
   void _showDeleteConfirmationDialog(BuildContext context, int logId) async {
     final bool? shouldDelete = await showDialog<bool>(
       context: context,
@@ -25,7 +25,9 @@ class FoodDetailScreen extends StatelessWidget {
         return AlertDialog(
           backgroundColor: const Color(0xFF2C2C2C),
           title: const Text('Hapus Log Makanan?'),
-          content: const Text('Apakah Anda yakin ingin menghapus catatan ini? Aksi ini tidak dapat dibatalkan.'),
+          content: const Text(
+            'Apakah Anda yakin ingin menghapus catatan ini? Aksi ini tidak dapat dibatalkan.',
+          ),
           actions: <Widget>[
             TextButton(
               child: const Text('Batal'),
@@ -34,7 +36,10 @@ class FoodDetailScreen extends StatelessWidget {
               },
             ),
             TextButton(
-              child: Text('Hapus', style: TextStyle(color: Colors.red.shade400)),
+              child: Text(
+                'Hapus',
+                style: TextStyle(color: Colors.red.shade400),
+              ),
               onPressed: () {
                 Navigator.of(dialogContext).pop(true);
               },
@@ -47,7 +52,7 @@ class FoodDetailScreen extends StatelessWidget {
     if (shouldDelete == true && context.mounted) {
       // Panggil BLoC untuk menghapus data
       context.read<FoodBloc>().add(DeleteFoodLogRequested(logId));
-      
+
       // --- PERBAIKAN DI SINI ---
       // Gunakan context.go('/') untuk kembali ke home secara eksplisit
       // daripada context.pop()
@@ -59,8 +64,11 @@ class FoodDetailScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final formattedDate = DateFormat('dd MMMM yyyy', 'id_ID').format(foodLog.createdAt);
-    
+    final formattedDate = DateFormat(
+      'dd MMMM yyyy',
+      'id_ID',
+    ).format(foodLog.createdAt);
+
     return Scaffold(
       // Hapus AppBar standar
       body: Stack(
@@ -75,7 +83,13 @@ class FoodDetailScreen extends StatelessWidget {
                 return const Center(child: CircularProgressIndicator());
               },
               errorBuilder: (context, error, stackTrace) {
-                return const Center(child: Icon(Icons.image_not_supported, color: Colors.grey, size: 40));
+                return const Center(
+                  child: Icon(
+                    Icons.image_not_supported,
+                    color: Colors.grey,
+                    size: 40,
+                  ),
+                );
               },
             ),
           ),
@@ -110,12 +124,14 @@ class FoodDetailScreen extends StatelessWidget {
             child: Container(
               constraints: BoxConstraints(
                 // Batasi ketinggian maksimal agar tidak menutupi seluruh layar
-                maxHeight: MediaQuery.of(context).size.height * 0.50, 
+                maxHeight: MediaQuery.of(context).size.height * 0.50,
               ),
               padding: const EdgeInsets.only(top: 16),
               decoration: BoxDecoration(
                 color: Theme.of(context).scaffoldBackgroundColor,
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(24),
+                ),
               ),
               child: SingleChildScrollView(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -139,22 +155,33 @@ class FoodDetailScreen extends StatelessWidget {
                       children: [
                         ClipRRect(
                           borderRadius: BorderRadius.circular(8),
-                          child: Image.network(foodLog.imageUrl, width: 50, height: 50, fit: BoxFit.cover),
+                          child: Image.network(
+                            foodLog.imageUrl,
+                            width: 50,
+                            height: 50,
+                            fit: BoxFit.cover,
+                          ),
                         ),
                         const SizedBox(width: 12),
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(formattedDate, style: TextStyle(color: Colors.grey.shade400)),
+                              Text(
+                                formattedDate,
+                                style: TextStyle(color: Colors.grey.shade400),
+                              ),
                               Text(
                                 foodLog.foodName,
-                                style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                                style: const TextStyle(
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.bold,
+                                ),
                                 overflow: TextOverflow.ellipsis,
                               ),
                             ],
                           ),
-                        )
+                        ),
                       ],
                     ),
                     const SizedBox(height: 16),
@@ -163,17 +190,27 @@ class FoodDetailScreen extends StatelessWidget {
                       children: [
                         // Tombol Hapus (sekarang OutlinedButton)
                         Expanded(
-                          flex: 1, // Beri jatah 2 bagian dari ruang (lebih lebar)
+                          flex:
+                              1, // Beri jatah 2 bagian dari ruang (lebih lebar)
                           child: ElevatedButton(
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: Theme.of(context).colorScheme.primary,
+                              backgroundColor: Theme.of(
+                                context,
+                              ).colorScheme.primary,
                               foregroundColor: Colors.white,
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10),
+                              ),
                               padding: const EdgeInsets.symmetric(vertical: 12),
-                              disabledBackgroundColor: Theme.of(context).colorScheme.primary.withOpacity(0.5),
+                              disabledBackgroundColor: Theme.of(
+                                context,
+                              ).colorScheme.primary.withOpacity(0.5),
                             ),
                             onPressed: () {
-                              _showDeleteConfirmationDialog(context, foodLog.id);
+                              _showDeleteConfirmationDialog(
+                                context,
+                                foodLog.id,
+                              );
                             },
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.center,
@@ -194,7 +231,9 @@ class FoodDetailScreen extends StatelessWidget {
                             style: OutlinedButton.styleFrom(
                               foregroundColor: Colors.grey.shade300,
                               side: BorderSide(color: Colors.grey.shade700),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10),
+                              ),
                               padding: const EdgeInsets.symmetric(vertical: 12),
                             ),
                             onPressed: () {},
@@ -221,10 +260,38 @@ class FoodDetailScreen extends StatelessWidget {
                       mainAxisSpacing: 10,
                       crossAxisSpacing: 10,
                       children: [
-                        _buildNutritionTile(context, title: 'Kalori', iconAssetPath: 'assets/icons/calorie_icon.svg', value: foodLog.calories, unit: 'kcal', color: calorieColor),
-                        _buildNutritionTile(context, title: 'Protein', iconAssetPath: 'assets/icons/protein_icon.svg', value: foodLog.protein, unit: 'g', color: proteinColor),
-                        _buildNutritionTile(context, title: 'Karbo', iconAssetPath: 'assets/icons/carb_icon.svg', value: foodLog.carbohydrate, unit: 'kcal', color: carbsColor),
-                        _buildNutritionTile(context, title: 'Lemak', iconAssetPath: 'assets/icons/fat_icon.svg', value: foodLog.fat, unit: 'g', color: fatColor),
+                        _buildNutritionTile(
+                          context,
+                          title: 'Kalori',
+                          iconAssetPath: 'assets/icons/calorie_icon.svg',
+                          value: foodLog.calories,
+                          unit: 'kcal',
+                          color: calorieColor,
+                        ),
+                        _buildNutritionTile(
+                          context,
+                          title: 'Protein',
+                          iconAssetPath: 'assets/icons/protein_icon.svg',
+                          value: foodLog.protein,
+                          unit: 'g',
+                          color: proteinColor,
+                        ),
+                        _buildNutritionTile(
+                          context,
+                          title: 'Karbo',
+                          iconAssetPath: 'assets/icons/carb_icon.svg',
+                          value: foodLog.carbohydrate,
+                          unit: 'kcal',
+                          color: carbsColor,
+                        ),
+                        _buildNutritionTile(
+                          context,
+                          title: 'Lemak',
+                          iconAssetPath: 'assets/icons/fat_icon.svg',
+                          value: foodLog.fat,
+                          unit: 'g',
+                          color: fatColor,
+                        ),
                       ],
                     ),
                     const SizedBox(height: 16), // Padding bawah
@@ -240,7 +307,8 @@ class FoodDetailScreen extends StatelessWidget {
 }
 
 // Widget helper untuk kartu nutrisi (Sama seperti di modal)
-Widget _buildNutritionTile(BuildContext context, {
+Widget _buildNutritionTile(
+  BuildContext context, {
   required String title,
   required String iconAssetPath,
   required double value,
@@ -248,7 +316,7 @@ Widget _buildNutritionTile(BuildContext context, {
   required Color color,
 }) {
   return Container(
-    padding: const EdgeInsets.all(12),
+    padding: const EdgeInsets.all(10),
     decoration: BoxDecoration(
       color: const Color(0xFF353535), // Warna latar belakang kartu
       borderRadius: BorderRadius.circular(12),
@@ -264,21 +332,31 @@ Widget _buildNutritionTile(BuildContext context, {
             color: color.withOpacity(0.3),
             shape: BoxShape.circle,
           ),
-          child: SvgPicture.asset(
-            iconAssetPath,
-          ),
+          child: SvgPicture.asset(iconAssetPath),
         ),
         const SizedBox(width: 12),
         // Kolom untuk teks
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-            Text('${value.toStringAsFixed(1)} $unit',
-                style: TextStyle(color: Colors.grey.shade400, fontSize: 14)),
-          ],
-        )
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                title,
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                ),
+                // Tambahkan overflow agar teks panjang tidak error
+                overflow: TextOverflow.ellipsis,
+              ),
+              Text(
+                '${value.toStringAsFixed(1)} $unit',
+                style: TextStyle(color: Colors.grey.shade400, fontSize: 14),
+              ),
+            ],
+          ),
+        ),
       ],
     ),
   );

@@ -11,7 +11,6 @@ import 'package:flutter_svg/svg.dart';
 import 'package:intl/intl.dart';
 import 'package:iconsax/iconsax.dart';
 
-
 const Color calorieColor = Color(0xFFE66400);
 const Color proteinColor = Color(0xFF0CE600);
 const Color carbsColor = Color(0xFFE6E600);
@@ -55,14 +54,20 @@ class _DetectionResultModalState extends State<DetectionResultModal> {
             context.read<FoodBloc>().add(FetchTodaysFood());
             if (mounted) Navigator.of(context).pop();
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Log makanan berhasil disimpan!'), backgroundColor: Colors.green),
+              const SnackBar(
+                content: Text('Log makanan berhasil disimpan!'),
+                backgroundColor: Colors.green,
+              ),
             );
           }
           if (state is DetectionFailure) {
             _isActionTaken = true;
             if (mounted) Navigator.of(context).pop();
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Error: ${state.message}'), backgroundColor: Colors.red),
+              SnackBar(
+                content: Text('Error: ${state.message}'),
+                backgroundColor: Colors.red,
+              ),
             );
           }
         },
@@ -80,7 +85,13 @@ class _DetectionResultModalState extends State<DetectionResultModal> {
                 builder: (context, state) {
                   // Pengecekan baru yang lebih aman
                   if (state is DetectionResultState) {
-                    return _buildSuccessUI(context, state.result, widget.imageFile, scrollController, state is DetectionSaveInProgress);
+                    return _buildSuccessUI(
+                      context,
+                      state.result,
+                      widget.imageFile,
+                      scrollController,
+                      state is DetectionSaveInProgress,
+                    );
                   }
                   if (state is DetectionLoading || state is DetectionInitial) {
                     return const Center(child: CircularProgressIndicator());
@@ -95,8 +106,17 @@ class _DetectionResultModalState extends State<DetectionResultModal> {
     );
   }
 
-  Widget _buildSuccessUI(BuildContext context, NutritionResult result, File imageFile, ScrollController scrollController, bool isSaving) {
-    final formattedDate = DateFormat('dd MMMM yyyy', 'id_ID').format(DateTime.now());
+  Widget _buildSuccessUI(
+    BuildContext context,
+    NutritionResult result,
+    File imageFile,
+    ScrollController scrollController,
+    bool isSaving,
+  ) {
+    final formattedDate = DateFormat(
+      'dd MMMM yyyy',
+      'id_ID',
+    ).format(DateTime.now());
     const Color cardColor = Color(0xFF353535);
 
     return ListView(
@@ -118,35 +138,51 @@ class _DetectionResultModalState extends State<DetectionResultModal> {
           children: [
             ClipRRect(
               borderRadius: BorderRadius.circular(8),
-              child: Image.file(imageFile, width: 50, height: 50, fit: BoxFit.cover),
+              child: Image.file(
+                imageFile,
+                width: 50,
+                height: 50,
+                fit: BoxFit.cover,
+              ),
             ),
             const SizedBox(width: 12),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(formattedDate, style: TextStyle(color: Colors.grey.shade400)),
+                  Text(
+                    formattedDate,
+                    style: TextStyle(color: Colors.grey.shade400),
+                  ),
                   // --- PERUBAHAN DI SINI: Gunakan nama gabungan ---
                   Text(
                     result.combinedFoodName,
-                    style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                    style: const TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                    ),
                     overflow: TextOverflow.ellipsis,
                   ),
                 ],
               ),
-            )
+            ),
           ],
         ),
 
         if (result.foods.length > 1) ...[
           const SizedBox(height: 16),
-          const Text("Makanan Terdeteksi:", style: TextStyle(color: Colors.grey)),
-          ...result.foods.map((food) => Text("• ${food.name} (${food.count} buah)")),
+          const Text(
+            "Makanan Terdeteksi:",
+            style: TextStyle(color: Colors.grey),
+          ),
+          ...result.foods.map(
+            (food) => Text("• ${food.name} (${food.count} buah)"),
+          ),
         ],
 
         const SizedBox(height: 16),
-        // Di dalam method _buildSuccessUI di detection_result_modal.dart
 
+        // Di dalam method _buildSuccessUI di detection_result_modal.dart
         Row(
           children: [
             // Tombol Ulangi
@@ -154,8 +190,13 @@ class _DetectionResultModalState extends State<DetectionResultModal> {
               style: OutlinedButton.styleFrom(
                 foregroundColor: Colors.grey.shade300,
                 side: BorderSide(color: Colors.grey.shade700),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                padding: const EdgeInsets.symmetric(
+                  vertical: 12,
+                  horizontal: 16,
+                ),
               ),
               // Gunakan parameter 'icon' dan 'label'
               icon: const Icon(Iconsax.refresh, size: 20),
@@ -171,15 +212,23 @@ class _DetectionResultModalState extends State<DetectionResultModal> {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Theme.of(context).colorScheme.primary,
                   foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
                   padding: const EdgeInsets.symmetric(vertical: 12),
-                  disabledBackgroundColor: Theme.of(context).colorScheme.primary.withOpacity(0.5),
+                  disabledBackgroundColor: Theme.of(
+                    context,
+                  ).colorScheme.primary.withOpacity(0.5),
                 ),
                 onPressed: isSaving
                     ? null
                     : () {
-                        setState(() { _isActionTaken = true; });
-                        context.read<DetectionBloc>().add(DetectionSaveRequested());
+                        setState(() {
+                          _isActionTaken = true;
+                        });
+                        context.read<DetectionBloc>().add(
+                          DetectionSaveRequested(),
+                        );
                       },
                 child: isSaving
                     ? const Row(
@@ -188,7 +237,10 @@ class _DetectionResultModalState extends State<DetectionResultModal> {
                           SizedBox(
                             width: 20,
                             height: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
                           ),
                           SizedBox(width: 8),
                           Text('Menyimpan...'),
@@ -213,7 +265,9 @@ class _DetectionResultModalState extends State<DetectionResultModal> {
                 style: OutlinedButton.styleFrom(
                   foregroundColor: Colors.grey.shade300,
                   side: BorderSide(color: Colors.grey.shade700),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
                   padding: const EdgeInsets.symmetric(vertical: 12),
                 ),
                 onPressed: isSaving ? null : () {},
@@ -230,7 +284,10 @@ class _DetectionResultModalState extends State<DetectionResultModal> {
           ],
         ),
         const SizedBox(height: 24),
-        const Text('Nutrisi', style: TextStyle(fontSize: 16, color: Colors.grey)),
+        const Text(
+          'Nutrisi',
+          style: TextStyle(fontSize: 16, color: Colors.grey),
+        ),
         const SizedBox(height: 8),
         GridView.count(
           crossAxisCount: 2,
@@ -241,20 +298,32 @@ class _DetectionResultModalState extends State<DetectionResultModal> {
           crossAxisSpacing: 10,
           children: [
             _buildNutritionTile(
-              title: 'Kalori', iconAssetPath: 'assets/icons/calorie_icon.svg',
-              value: result.totalCalories, unit: 'kcal', color: cardColor
+              title: 'Kalori',
+              iconAssetPath: 'assets/icons/calorie_icon.svg',
+              value: result.totalCalories,
+              unit: 'kcal',
+              color: calorieColor, // <-- Gunakan warna spesifik
             ),
             _buildNutritionTile(
-              title: 'Protein', iconAssetPath: 'assets/icons/protein_icon.svg',
-              value: result.totalProtein, unit: 'g', color: cardColor
+              title: 'Protein',
+              iconAssetPath: 'assets/icons/protein_icon.svg',
+              value: result.totalProtein,
+              unit: 'g',
+              color: proteinColor, // <-- Gunakan warna spesifik
             ),
             _buildNutritionTile(
-              title: 'Karbo', iconAssetPath: 'assets/icons/carb_icon.svg',
-              value: result.totalCarbohydrate, unit: 'kcal', color: cardColor
+              title: 'Karbo',
+              iconAssetPath: 'assets/icons/carb_icon.svg',
+              value: result.totalCarbohydrate,
+              unit: 'kcal',
+              color: carbsColor, // <-- Gunakan warna spesifik
             ),
             _buildNutritionTile(
-              title: 'Lemak', iconAssetPath: 'assets/icons/fat_icon.svg',
-              value: result.totalFat, unit: 'g', color: cardColor
+              title: 'Lemak',
+              iconAssetPath: 'assets/icons/fat_icon.svg',
+              value: result.totalFat,
+              unit: 'g',
+              color: fatColor, // <-- Gunakan warna spesifik
             ),
           ],
         ),
@@ -270,25 +339,31 @@ class _DetectionResultModalState extends State<DetectionResultModal> {
       ],
     );
   }
-  
+
   Widget _buildFailureUI(BuildContext context) {
     return Padding(
-        padding: const EdgeInsets.all(32.0),
-        child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-                const Icon(Iconsax.danger, color: Colors.amber, size: 50),
-                const SizedBox(height: 16),
-                const Text("Deteksi Gagal", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-                const SizedBox(height: 8),
-                const Text("Tidak dapat mengenali makanan pada gambar. Coba lagi dengan gambar yang lebih jelas.", textAlign: TextAlign.center),
-                const SizedBox(height: 24),
-                ElevatedButton(
-                    onPressed: () => Navigator.of(context).pop(),
-                    child: const Text("Coba Lagi"),
-                )
-            ],
-        ),
+      padding: const EdgeInsets.all(32.0),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(Iconsax.danger, color: Colors.amber, size: 50),
+          const SizedBox(height: 16),
+          const Text(
+            "Deteksi Gagal",
+            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 8),
+          const Text(
+            "Tidak dapat mengenali makanan pada gambar. Coba lagi dengan gambar yang lebih jelas.",
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 24),
+          ElevatedButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text("Coba Lagi"),
+          ),
+        ],
+      ),
     );
   }
 
@@ -300,7 +375,7 @@ class _DetectionResultModalState extends State<DetectionResultModal> {
     required Color color, // Warna ini sekarang untuk ikon
   }) {
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
         color: const Color(0xFF353535), // Warna latar belakang kartu
         borderRadius: BorderRadius.circular(12),
@@ -316,9 +391,7 @@ class _DetectionResultModalState extends State<DetectionResultModal> {
               color: color.withOpacity(0.3),
               shape: BoxShape.circle,
             ),
-            child: SvgPicture.asset(
-              iconAssetPath,
-            ),
+            child: SvgPicture.asset(iconAssetPath),
           ),
           const SizedBox(width: 12),
           // Kolom untuk teks
@@ -326,11 +399,32 @@ class _DetectionResultModalState extends State<DetectionResultModal> {
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-              Text('${value.toStringAsFixed(1)} $unit',
-                  style: TextStyle(color: Colors.grey.shade400, fontSize: 14)),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      title,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
+                      // Tambahkan overflow agar teks panjang tidak error
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    Text(
+                      '${value.toStringAsFixed(1)} $unit',
+                      style: TextStyle(
+                        color: Colors.grey.shade400,
+                        fontSize: 14,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ],
-          )
+          ),
         ],
       ),
     );
