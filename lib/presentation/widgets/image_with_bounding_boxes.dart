@@ -18,42 +18,43 @@ class ImageWithBoundingBoxes extends StatefulWidget {
 }
 
 class _ImageWithBoundingBoxesState extends State<ImageWithBoundingBoxes> {
-  ui.Image? _backgroundImage;
+  ui.Image? _imageInfo;
 
   @override
   void initState() {
     super.initState();
-    _loadImage();
+    _loadImageInfo();
   }
 
-  // Fungsi untuk memuat gambar dan mendapatkan ukurannya
-  Future<void> _loadImage() async {
+  Future<void> _loadImageInfo() async {
     final bytes = await widget.imageFile.readAsBytes();
     final image = await decodeImageFromList(bytes);
     if (mounted) {
       setState(() {
-        _backgroundImage = image;
+        _imageInfo = image;
       });
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    // Tampilkan loading jika gambar belum siap
-    if (_backgroundImage == null) {
+    if (_imageInfo == null) {
       return const Center(child: CircularProgressIndicator());
     }
 
     return ClipRRect(
-      borderRadius: BorderRadius.circular(16),
-      child: AspectRatio(
-        // Gunakan aspect ratio dari gambar asli agar tidak terdistorsi
-        aspectRatio: _backgroundImage!.width / _backgroundImage!.height,
+      borderRadius: BorderRadius.circular(16.0),
+      child: Container(
+        width: double.infinity,
         child: CustomPaint(
-          // Kirim gambar dan bounding box ke painter
           painter: BoundingBoxPainter(
-            image: _backgroundImage!,
+            image: _imageInfo!,
             foodItems: widget.foodItems,
+          ),
+          child: AspectRatio(
+            // PERBAIKAN: Gunakan aspect ratio backend, bukan Flutter image
+            aspectRatio: 1280 / 720, // Backend ratio: landscape
+            child: Container(),
           ),
         ),
       ),
@@ -69,46 +70,212 @@ class BoundingBoxPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    // Gambar latar belakang (gambar makanan)
-    paintImage(
-      canvas: canvas,
-      rect: Rect.fromLTWH(0, 0, size.width, size.height),
-      image: image,
-      fit: BoxFit.cover,
-      alignment: Alignment.center,
-    );
-
-    // Hitung faktor skala
-    final double scaleX = size.width / image.width;
-    final double scaleY = size.height / image.height;
-
+    print('=== DEBUGGING ORIENTATION FIX ===');
+    print('Canvas size: ${size.width} x ${size.height}');
+    print('Flutter Image size: ${image.width} x ${image.height}');
+    
+    // PERBAIKAN UTAMA: Gunakan dimensi backend sebagai ground truth
+    final backendImageWidth = 1280.0;  // Backend width
+    final backendImageHeight = 720.0;  // Backend height
+    
+    print('Backend image size: ${backendImageWidth} x ${backendImageHeight}');
+    
+    // 1. Tentukan apakah perlu rotasi koordinat
+    bool needsRotation = false;
+    if ((image.width < image.height) && (backendImageWidth > backendImageHeight)) {
+      // Flutter image portrait, backend landscape - butuh rotasi
+      needsRotation = true;
+      print('ROTATION NEEDED: Flutter image is portrait, backend is landscape');
+    }
+    
+    // 2. Gambar background image (Flutter image apa adanya)
+    final imagePaint = Paint()..filterQuality = FilterQuality.high;
+    final imageRect = Rect.fromLTWH(0, 0, size.width, size.height);
+    final srcRect = Rect.fromLTWH(0, 0, image.width.toDouble(), image.height.toDouble());
+    
+    canvas.drawImageRect(image, srcRect, imageRect, imagePaint);
+    
+    // 3. Hitung scaling berdasarkan canvas yang mengikuti backend aspect ratio
+    final scaleX = size.width / backendImageWidth;
+    final scaleY = size.height / backendImageHeight;
+    
+    print('Scale factors: scaleX=$scaleX, scaleY=$scaleY');
+    
+    // 4. Warna untuk setiap detection
     final colors = [
-      Colors.pink, Colors.green, Colors.yellow, Colors.blue, Colors.orange
+      Colors.red,
+      Colors.green, 
+      Colors.blue,
+      Colors.yellow,
+      Colors.purple,
+      Colors.orange,
+      Colors.cyan,
+      Colors.pink,
     ];
 
-    for (int i = 0; i < foodItems.length; i++) {
-      final foodItem = foodItems[i];
-      final color = colors[i % colors.length];
+    // 5. Gambar bounding boxes
+    int detectionIndex = 0;
+    for (int foodIndex = 0; foodIndex < foodItems.length; foodIndex++) {
+      final foodItem = foodItems[foodIndex];
       
-      final paint = Paint()
-        ..color = color
-        ..strokeWidth = 3
-        ..style = PaintingStyle.stroke;
-
-      for (final box in foodItem.boundingBoxes) {
-        // Asumsi format box sekarang adalah [x_min, y_min, x_max, y_max]
-        if (box.length == 4) {
-          // Buat Rect dari dua titik dan sesuaikan skalanya
-          final scaledRect = Rect.fromLTRB(
-            box[0] * scaleX, // x_min
-            box[1] * scaleY, // y_min
-            box[2] * scaleX, // x_max
-            box[3] * scaleY, // y_max
-          );
-          canvas.drawRect(scaledRect, paint);
+      for (int boxIndex = 0; boxIndex < foodItem.boundingBoxes.length; boxIndex++) {
+        final box = foodItem.boundingBoxes[boxIndex];
+        
+        if (box.length >= 4) {
+          final color = colors[detectionIndex % colors.length];
+          detectionIndex++;
+          
+          // Koordinat dari backend (dalam sistem koordinat 1280x720)
+          double xMin = box[0].toDouble();
+          double yMin = box[1].toDouble(); 
+          double xMax = box[2].toDouble();
+          double yMax = box[3].toDouble();
+          
+          print('--- Detection ${detectionIndex} ---');
+          print('Food: ${foodItem.name}, Box ${boxIndex + 1}');
+          print('Original backend coords: [$xMin, $yMin, $xMax, $yMax]');
+          
+          // PERBAIKAN: Jika perlu rotasi koordinat (dari landscape ke portrait)
+          if (needsRotation) {
+            // Rotasi 90 derajat: (x,y) -> (y, width-x)
+            double newXMin = yMin;
+            double newYMin = backendImageWidth - xMax;
+            double newXMax = yMax; 
+            double newYMax = backendImageWidth - xMin;
+            
+            xMin = newXMin;
+            yMin = newYMin;
+            xMax = newXMax;
+            yMax = newYMax;
+            
+            // Update dimensi referensi setelah rotasi
+            final rotatedWidth = backendImageHeight; // 720
+            final rotatedHeight = backendImageWidth; // 1280
+            
+            // Recalculate scale dengan dimensi yang sudah dirotasi
+            final rotatedScaleX = size.width / rotatedWidth;
+            final rotatedScaleY = size.height / rotatedHeight;
+            
+            print('After rotation coords: [$xMin, $yMin, $xMax, $yMax]');
+            print('Rotated scale: scaleX=$rotatedScaleX, scaleY=$rotatedScaleY');
+            
+            // Konversi ke koordinat canvas
+            final canvasXMin = xMin * rotatedScaleX;
+            final canvasYMin = yMin * rotatedScaleY;
+            final canvasXMax = xMax * rotatedScaleX;
+            final canvasYMax = yMax * rotatedScaleY;
+            
+            print('Final canvas coords: [$canvasXMin, $canvasYMin, $canvasXMax, $canvasYMax]');
+            
+            _drawBoundingBox(canvas, canvasXMin, canvasYMin, canvasXMax, canvasYMax, color, '${foodItem.name} ${boxIndex + 1}');
+          } else {
+            // Tidak perlu rotasi, langsung scale
+            final canvasXMin = xMin * scaleX;
+            final canvasYMin = yMin * scaleY;
+            final canvasXMax = xMax * scaleX;
+            final canvasYMax = yMax * scaleY;
+            
+            print('Direct canvas coords: [$canvasXMin, $canvasYMin, $canvasXMax, $canvasYMax]');
+            
+            _drawBoundingBox(canvas, canvasXMin, canvasYMin, canvasXMax, canvasYMax, color, '${foodItem.name} ${boxIndex + 1}');
+          }
         }
       }
     }
+    
+    print('=== END DEBUG ===');
+  }
+
+  void _drawBoundingBox(Canvas canvas, double xMin, double yMin, double xMax, double yMax, Color color, String label) {
+    // Validasi
+    if (xMax <= xMin || yMax <= yMin) {
+      print('Skipping invalid box: [$xMin, $yMin, $xMax, $yMax]');
+      return;
+    }
+
+    final rect = Rect.fromLTRB(xMin, yMin, xMax, yMax);
+    
+    // Gambar outline putih tebal untuk kontras
+    final outlinePaint = Paint()
+      ..color = Colors.white
+      ..strokeWidth = 6.0
+      ..style = PaintingStyle.stroke;
+    canvas.drawRect(rect, outlinePaint);
+    
+    // Gambar bounding box dengan warna
+    final boxPaint = Paint()
+      ..color = color
+      ..strokeWidth = 4.0
+      ..style = PaintingStyle.stroke;
+    canvas.drawRect(rect, boxPaint);
+    
+    // Gambar corner markers yang lebih besar
+    final cornerPaint = Paint()
+      ..color = color
+      ..style = PaintingStyle.fill;
+    
+    final cornerSize = 12.0;
+    // Corner circles
+    canvas.drawCircle(Offset(xMin, yMin), cornerSize / 2, cornerPaint);
+    canvas.drawCircle(Offset(xMax, yMin), cornerSize / 2, cornerPaint);
+    canvas.drawCircle(Offset(xMin, yMax), cornerSize / 2, cornerPaint);
+    canvas.drawCircle(Offset(xMax, yMax), cornerSize / 2, cornerPaint);
+    
+    // Gambar label
+    _drawLabel(canvas, label, Offset(xMin, yMin), color);
+  }
+
+  void _drawLabel(Canvas canvas, String text, Offset position, Color color) {
+    final textSpan = TextSpan(
+      text: text,
+      style: TextStyle(
+        color: Colors.white,
+        fontSize: 16,
+        fontWeight: FontWeight.bold,
+        shadows: [
+          Shadow(
+            color: Colors.black,
+            offset: const Offset(2, 2),
+            blurRadius: 4,
+          ),
+        ],
+      ),
+    );
+
+    final textPainter = TextPainter(
+      text: textSpan,
+      textDirection: TextDirection.ltr,
+    );
+    textPainter.layout();
+
+    final padding = 8.0;
+    final labelRect = Rect.fromLTWH(
+      position.dx,
+      position.dy - textPainter.height - padding * 2,
+      textPainter.width + padding * 2,
+      textPainter.height + padding * 2,
+    );
+
+    // Background dengan outline
+    final backgroundPaint = Paint()..color = color;
+    final outlinePaint = Paint()
+      ..color = Colors.white
+      ..strokeWidth = 2.0
+      ..style = PaintingStyle.stroke;
+      
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(labelRect, Radius.circular(6)),
+      backgroundPaint
+    );
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(labelRect, Radius.circular(6)),
+      outlinePaint
+    );
+    
+    textPainter.paint(
+      canvas,
+      Offset(position.dx + padding, position.dy - textPainter.height - padding),
+    );
   }
 
   @override
