@@ -4,11 +4,16 @@ import 'package:equatable/equatable.dart';
 class FoodItem extends Equatable {
   final String name;
   final int count;
+  final List<List<double>> boundingBoxes; // <-- Dipindahkan ke sini
 
-  const FoodItem({required this.name, required this.count});
+  const FoodItem({
+    required this.name,
+    required this.count,
+    required this.boundingBoxes, // <-- Ditambahkan ke constructor
+  });
 
   @override
-  List<Object?> get props => [name, count];
+  List<Object?> get props => [name, count, boundingBoxes];
 }
 
 // Kelas utama untuk hasil deteksi
@@ -18,6 +23,7 @@ class NutritionResult extends Equatable {
   final double totalProtein;
   final double totalFat;
   final double totalCarbohydrate;
+  // HAPUS boundingBoxes dari sini
 
   const NutritionResult({
     required this.foods,
@@ -25,9 +31,9 @@ class NutritionResult extends Equatable {
     required this.totalProtein,
     required this.totalFat,
     required this.totalCarbohydrate,
+    // HAPUS boundingBoxes dari sini
   });
 
-  // Helper untuk mendapatkan nama gabungan
   String get combinedFoodName {
     return foods.map((food) => food.name).join(', ');
   }

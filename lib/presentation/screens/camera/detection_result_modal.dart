@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:bundacare/domain/entities/nutrition_result.dart';
+import 'package:bundacare/presentation/widgets/image_with_bounding_boxes.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:bundacare/core/injection_container.dart' as di;
@@ -258,11 +259,11 @@ class _DetectionResultModalState extends State<DetectionResultModal> {
           ],
         ),
         const SizedBox(height: 24),
-        ClipRRect(
-          borderRadius: BorderRadius.circular(16),
-          child: Image.file(
-            imageFile,
-            fit: BoxFit.cover,
+        SizedBox(
+          height: 700, // Beri ketinggian yang tetap
+          child: ImageWithBoundingBoxes(
+            imageFile: imageFile,
+            foodItems: result.foods,
           ),
         ),
         const SizedBox(height: 80),
