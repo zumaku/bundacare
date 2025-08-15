@@ -22,9 +22,14 @@ class DetectionResultScreen extends StatelessWidget {
             if (state is DetectionSuccess) {
               final result = state.result;
               return Center(
-                child: Text(
-                  'Nama: ${result.foodName}\nKalori: ${result.calories} kcal',
-                  style: const TextStyle(fontSize: 20),
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Text(
+                    // --- PERBAIKAN DI SINI ---
+                    'Nama: ${result.combinedFoodName}\nTotal Kalori: ${result.totalCalories} kcal',
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(fontSize: 20),
+                  ),
                 ),
               );
             }

@@ -125,8 +125,9 @@ class _DetectionResultModalState extends State<DetectionResultModal> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(formattedDate, style: TextStyle(color: Colors.grey.shade400)),
+                  // --- PERUBAHAN DI SINI: Gunakan nama gabungan ---
                   Text(
-                    result.foodName,
+                    result.combinedFoodName,
                     style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -135,6 +136,13 @@ class _DetectionResultModalState extends State<DetectionResultModal> {
             )
           ],
         ),
+
+        if (result.foods.length > 1) ...[
+          const SizedBox(height: 16),
+          const Text("Makanan Terdeteksi:", style: TextStyle(color: Colors.grey)),
+          ...result.foods.map((food) => Text("• ${food.name} (${food.count} buah)")),
+        ],
+
         const SizedBox(height: 16),
         // Di dalam method _buildSuccessUI di detection_result_modal.dart
 
@@ -227,37 +235,25 @@ class _DetectionResultModalState extends State<DetectionResultModal> {
           crossAxisCount: 2,
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
-          childAspectRatio: 2.5, // Sesuaikan rasio agar pas
+          childAspectRatio: 2.5,
           mainAxisSpacing: 10,
           crossAxisSpacing: 10,
           children: [
             _buildNutritionTile(
-              title: 'Kalori',
-              iconAssetPath: 'assets/icons/calorie_icon.svg',
-              value: result.calories,
-              unit: 'kcal',
-              color: calorieColor, // <-- Gunakan warna spesifik
+              title: 'Kalori', iconAssetPath: 'assets/icons/calorie_icon.svg',
+              value: result.totalCalories, unit: 'kcal', color: cardColor
             ),
             _buildNutritionTile(
-              title: 'Protein',
-              iconAssetPath: 'assets/icons/protein_icon.svg',
-              value: result.protein,
-              unit: 'g',
-              color: proteinColor, // <-- Gunakan warna spesifik
+              title: 'Protein', iconAssetPath: 'assets/icons/protein_icon.svg',
+              value: result.totalProtein, unit: 'g', color: cardColor
             ),
             _buildNutritionTile(
-              title: 'Karbo',
-              iconAssetPath: 'assets/icons/carb_icon.svg',
-              value: result.carbohydrate,
-              unit: 'kcal',
-              color: carbsColor, // <-- Gunakan warna spesifik
+              title: 'Karbo', iconAssetPath: 'assets/icons/carb_icon.svg',
+              value: result.totalCarbohydrate, unit: 'kcal', color: cardColor
             ),
             _buildNutritionTile(
-              title: 'Lemak',
-              iconAssetPath: 'assets/icons/fat_icon.svg',
-              value: result.fat,
-              unit: 'g',
-              color: fatColor, // <-- Gunakan warna spesifik
+              title: 'Lemak', iconAssetPath: 'assets/icons/fat_icon.svg',
+              value: result.totalFat, unit: 'g', color: cardColor
             ),
           ],
         ),

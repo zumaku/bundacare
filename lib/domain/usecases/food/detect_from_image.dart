@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'package:bundacare/data/repositories/detection_repository_impl.dart';
 import 'package:bundacare/domain/repositories/detection_repository.dart';
 
 class DetectFromImage {
@@ -7,7 +6,7 @@ class DetectFromImage {
 
   DetectFromImage(this.repository);
 
-  // Ganti return type dari Future<NutritionResult> menjadi Future<DetectionData>
+  // Return type-nya sekarang sudah benar: Future<DetectionData>
   Future<DetectionData> call(File imageFile) async {
     return await repository.detectFromImage(imageFile);
   }

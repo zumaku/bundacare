@@ -1,20 +1,13 @@
 import 'dart:io';
 import 'package:bundacare/data/datasources/detection_remote_data_source.dart';
-import 'package:bundacare/domain/entities/nutrition_result.dart';
 import 'package:bundacare/domain/repositories/detection_repository.dart';
-
-// Definisikan class kecil untuk membungkus hasil
-class DetectionData {
-  final NutritionResult result;
-  final String imageUrl;
-  DetectionData(this.result, this.imageUrl);
-}
 
 class DetectionRepositoryImpl implements DetectionRepository {
   final DetectionRemoteDataSource remoteDataSource;
 
   DetectionRepositoryImpl({required this.remoteDataSource});
 
+  // Metode ini sekarang menepati janji dengan mengembalikan Future<DetectionData>
   @override
   Future<DetectionData> detectFromImage(File imageFile) async {
     final imageUrl = await remoteDataSource.uploadImage(imageFile);
@@ -27,6 +20,7 @@ class DetectionRepositoryImpl implements DetectionRepository {
     }
   }
 
+  // Tambahkan kembali implementasi hapus gambar
   @override
   Future<void> deleteUploadedImage(String imageUrl) async {
     await remoteDataSource.deleteImage(imageUrl);
