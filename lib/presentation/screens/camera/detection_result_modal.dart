@@ -315,7 +315,7 @@ class _DetectionResultModalState extends State<DetectionResultModal> {
               title: 'Karbo',
               iconAssetPath: 'assets/icons/carb_icon.svg',
               value: result.totalCarbohydrate,
-              unit: 'kcal',
+              unit: 'g',
               color: carbsColor, // <-- Gunakan warna spesifik
             ),
             _buildNutritionTile(
@@ -328,12 +328,10 @@ class _DetectionResultModalState extends State<DetectionResultModal> {
           ],
         ),
         const SizedBox(height: 24),
-        SizedBox(
-          height: 700, // Beri ketinggian yang tetap
-          child: ImageWithBoundingBoxes(
-            imageFile: imageFile,
-            foodItems: result.foods,
-          ),
+        ImageWithBoxes(
+          imageFile: imageFile,
+          foodItems: result.foods,
+          originalImageDimensions: result.imageDimensions,
         ),
         const SizedBox(height: 80),
       ],

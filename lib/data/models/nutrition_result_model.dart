@@ -30,6 +30,7 @@ class NutritionResultModel extends NutritionResult {
     required super.totalProtein,
     required super.totalFat,
     required super.totalCarbohydrate,
+    required super.imageDimensions,
     // HAPUS boundingBoxes dari sini
   });
 
@@ -41,6 +42,11 @@ class NutritionResultModel extends NutritionResult {
     final totalJson = json['total'] as Map<String, dynamic>? ?? {};
     
     // HAPUS parsing bounding_boxes dari sini
+    // Parse dimensi gambar dari JSON
+    final dimensions = json['image_dimensions'] as Map<String, dynamic>?;
+    final imageDimensions = dimensions != null
+        ? {'width': dimensions['width'] as int, 'height': dimensions['height'] as int}
+        : null;
 
     return NutritionResultModel(
       foods: foodsList,
@@ -49,6 +55,7 @@ class NutritionResultModel extends NutritionResult {
       totalFat: (totalJson['fat'] as num?)?.toDouble() ?? 0.0,
       totalCarbohydrate: (totalJson['carbohydrate'] as num?)?.toDouble() ?? 0.0,
       // HAPUS boundingBoxes dari sini
+      imageDimensions: imageDimensions,
     );
   }
 }
