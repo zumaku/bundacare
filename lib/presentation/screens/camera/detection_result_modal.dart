@@ -327,6 +327,28 @@ class _DetectionResultModalState extends State<DetectionResultModal> {
             ),
           ],
         ),
+        if (result.risk.isNotEmpty) ...[
+          const SizedBox(height: 24),
+          const Text('Potensi Risiko', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 8),
+          // Tampilkan setiap risiko sebagai item list
+          ...result.risk.map((riskText) => Padding(
+            padding: const EdgeInsets.only(bottom: 8.0),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Icon(Iconsax.warning_2, color: Colors.amber, size: 20),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    riskText,
+                    style: const TextStyle(fontSize: 16),
+                  ),
+                ),
+              ],
+            ),
+          )),
+        ],
         const SizedBox(height: 24),
         ImageWithBoxes(
           imageFile: imageFile,

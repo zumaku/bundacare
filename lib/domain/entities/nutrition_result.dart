@@ -24,6 +24,7 @@ class NutritionResult extends Equatable {
   final double totalFat;
   final double totalCarbohydrate;
   final Map<String, int>? imageDimensions;
+  final List<String> risk;
   // HAPUS boundingBoxes dari sini
 
   const NutritionResult({
@@ -33,6 +34,7 @@ class NutritionResult extends Equatable {
     required this.totalFat,
     required this.totalCarbohydrate,
     required this.imageDimensions,
+    required this.risk,
     // HAPUS boundingBoxes dari sini
   });
 
@@ -41,5 +43,5 @@ class NutritionResult extends Equatable {
   }
 
   @override
-  List<Object?> get props => [foods, totalCalories, totalProtein, totalFat, totalCarbohydrate, imageDimensions];
+  List<Object?> get props => [foods, totalCalories, totalProtein, totalFat, totalCarbohydrate, imageDimensions, risk];
 }
